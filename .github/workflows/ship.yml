@@ -7,37 +7,23 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    container:
+      image: kivy/buildozer:latest
+    timeout-minutes: 90
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            git zip unzip openjdk-17-jdk \
-            python3-pip autoconf libtool pkg-config \
-            zlib1g-dev libncurses5-dev libncursesw5-dev \
-            libtinfo5 cmake libffi-dev libssl-dev
-
-      - name: Install Buildozer and Cython
-        run: |
-          pip install --upgrade pip
-          pip install buildozer cython==0.29.36
+      - name: Fix git ownership
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Build APK
         run: |
-          yes | buildozer -v android debug
+          yes | buildozer android debug 2>&1 | tail -100
         env:
-          JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+          BUILDOZER_WARN_ON_ROOT: 0
 
       - name: Upload APK
         if: always()
@@ -52,8 +38,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
-          name: Gust Survival Build ${{ github.run_number }}
+          name: Gust Survival build ${{ github.run_number }}
           files: bin/*.apk
           generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
