@@ -1,0 +1,14 @@
+{
+  "appId": "com.finikgustsurvival.app",
+  "appName": "Gust Survival",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}
