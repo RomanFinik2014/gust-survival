@@ -2,155 +2,220 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#1a1a1a">
-<title>Gust Survival</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#1a1a1a"><title>Gust Survival</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
-  html, body { height: 100%; overflow: hidden; background: #1a1a1a; font-family: -apple-system, Arial, sans-serif; touch-action: none; }
-  canvas { display: block; touch-action: none; }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{height:100%;overflow:hidden;background:#1a1a1a;font-family:Arial,sans-serif;touch-action:none;color:#f4d4a0}
+canvas{display:block;touch-action:none}
+#rotate{position:fixed;inset:0;background:#1a1a1a;display:none;align-items:center;justify-content:center;flex-direction:column;gap:20px;z-index:9999;padding:30px;text-align:center}
+#rotate .icon{font-size:80px;animation:rot 2s ease-in-out infinite}
+@keyframes rot{0%,30%{transform:rotate(0)}70%,100%{transform:rotate(90deg)}}
+#rotate p{font-size:18px;color:#ccc}
+@media(orientation:portrait){#rotate{display:flex}}
+#hud{position:fixed;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top) + 6px) calc(env(safe-area-inset-right) + 12px) 6px calc(env(safe-area-inset-left) + 12px);display:none;pointer-events:none;z-index:10}
+#hud.show{display:block}
+#stats{display:flex;flex-direction:column;gap:4px;margin-left:58px}
+.bar{width:160px;height:16px;background:rgba(0,0,0,.6);border-radius:8px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.15)}
+.bar .fill{height:100%;transition:width .15s}
+#hpFill{background:linear-gradient(90deg,#c0392b,#e74c3c);width:100%}
+#hungerFill{background:linear-gradient(90deg,#b8860b,#f0c040);width:100%}
+.bar .label{position:absolute;inset:0;display:flex;align-items:center;padding:0 8px;font-size:10px;color:#fff;text-shadow:0 1px 2px #000;font-weight:600}
+#leftInfo{margin-left:58px;margin-top:5px;font-size:12px;color:#fff;text-shadow:0 1px 3px #000}
+#fps{font-size:10px;color:#7fff7f;font-weight:bold;background:rgba(0,0,0,.5);padding:2px 6px;border-radius:5px;display:inline-block;margin-right:6px}
+#dayInfo{display:inline-block;font-weight:bold}
+.rusty{position:relative;background:radial-gradient(circle at 25% 25%,rgba(255,200,100,.22),transparent 55%),radial-gradient(circle at 75% 75%,rgba(40,15,0,.5),transparent 60%),linear-gradient(135deg,#9c5420 0%,#7a3f1a 25%,#5a2e10 55%,#6b3a1a 80%,#4a2410 100%);border:2px solid #2a1508;box-shadow:inset 0 2px 4px rgba(255,180,80,.18),inset 0 -3px 8px rgba(0,0,0,.55),0 3px 8px rgba(0,0,0,.6);color:#f4d4a0;text-shadow:0 1px 2px rgba(0,0,0,.9);transition:transform .08s,filter .1s;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:bold;touch-action:manipulation}
+.rusty:active{transform:scale(.92);filter:brightness(.88)}
+#menuBtn{position:fixed;top:calc(env(safe-area-inset-top) + 6px);left:50%;transform:translateX(-50%);z-index:30;width:44px;height:44px;border-radius:11px;font-size:20px;display:none}
+#menuBtn.show{display:flex}
+#mapBtn{position:fixed;top:calc(env(safe-area-inset-top) + 6px);left:calc(env(safe-area-inset-left) + 12px);z-index:30;width:44px;height:44px;border-radius:11px;font-size:20px;display:none}
+#mapBtn.show{display:flex}
+#topBtns{position:fixed;top:calc(env(safe-area-inset-top) + 6px);right:calc(env(safe-area-inset-right) + 12px);display:none;gap:8px;z-index:30}
+#topBtns.show{display:flex}
+#topBtns button{width:44px;height:44px;border-radius:11px;font-size:20px}
+#mapScreen{position:fixed;inset:0;background:rgba(0,0,0,.95);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:600;padding:15px}
+#mapScreen.show{display:flex}
+#mapScreen h2{font-size:20px;margin-bottom:10px;letter-spacing:3px;color:#f4d4a0}
+#mapCanvas{background:#1a2a1a;border:3px solid #4a2a15;border-radius:10px;max-width:95vw;max-height:70vh;touch-action:none}
+#mapScreen .hint{color:#a08060;font-size:11px;margin-top:10px;text-align:center}
+#mapScreen button{margin-top:10px;padding:10px 34px;border-radius:12px;font-size:14px;font-weight:bold}
+#joyBase{position:fixed;left:calc(env(safe-area-inset-left) + 18px);bottom:calc(env(safe-area-inset-bottom) + 100px);width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.18);z-index:20;touch-action:none;display:none}
+#joyBase.show{display:block}
+#joyStick{position:absolute;left:50%;top:50%;width:50px;height:50px;margin:-25px 0 0 -25px;border-radius:50%;background:rgba(255,255,255,.35);border:2px solid rgba(255,255,255,.5);pointer-events:none}
+#actions{position:fixed;right:calc(env(safe-area-inset-right) + 18px);bottom:calc(env(safe-area-inset-bottom) + 100px);display:none;flex-direction:column;gap:10px;z-index:20;align-items:flex-end}
+#actions.show{display:flex}
+#actions button{width:60px;height:60px;border-radius:50%;font-size:26px}
+#actions #attackBtn{width:74px;height:74px;font-size:32px}
+#hotbar{position:fixed;bottom:calc(env(safe-area-inset-bottom) + 8px);left:50%;transform:translateX(-50%);display:none;gap:5px;padding:5px;background:rgba(0,0,0,.6);border:2px solid #2a1508;border-radius:12px;z-index:25}
+#hotbar.show{display:flex}
+.slot{width:54px;height:54px;background:linear-gradient(180deg,#3a2010,#2a1810);border:2px solid #4a2a15;border-radius:8px;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s,transform .08s;box-shadow:inset 0 2px 4px rgba(0,0,0,.5)}
+.slot.active{border-color:#ffcc44;box-shadow:inset 0 2px 4px rgba(0,0,0,.5),0 0 12px rgba(255,204,68,.6);transform:scale(1.05)}
+.slot .num{position:absolute;top:1px;left:4px;font-size:9px;color:rgba(255,255,255,.4);font-weight:bold}
+.slot .cnt{position:absolute;bottom:1px;right:4px;font-size:11px;color:#fff;font-weight:bold;text-shadow:0 1px 2px #000}
+.slot .icn{font-size:28px;line-height:1;pointer-events:none}
+.slot svg{pointer-events:none}
+#backpack{position:fixed;top:50%;left:50%;transform:translate(-50%,calc(-50% - 55px));background:linear-gradient(180deg,#3a2010,#2a1810);border:3px solid #4a2a15;border-radius:16px;padding:12px;z-index:100;display:none;box-shadow:0 10px 40px rgba(0,0,0,.85);max-width:96vw}
+#backpack.open{display:block}
+#backpack h2{font-size:15px;margin-bottom:10px;text-align:center;letter-spacing:2px}
+#bpMain{display:flex;gap:14px;align-items:flex-start}
+#bpChar{display:flex;flex-direction:column;align-items:center;gap:8px}
+#charCanvas{display:block;background:rgba(0,0,0,.28);border:2px solid #4a2a15;border-radius:10px;padding:2px}
+#charSlots{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
+.charSlot{width:42px;height:42px;background:linear-gradient(180deg,#3a2010,#2a1810);border:2px solid #4a2a15;border-radius:8px;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:inset 0 2px 4px rgba(0,0,0,.5);color:rgba(255,255,255,.18);font-size:18px}
+.charSlot .icn{font-size:22px;color:#f4d4a0}
+#bpGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
+#backpack .slot{width:46px;height:46px}
+#backpack .slot .icn{font-size:22px}
+#bpClose{width:100%;margin-top:12px;padding:9px;border-radius:10px;background:linear-gradient(135deg,#8b2020,#5a1010);color:#fff;border:2px solid #2a0808;font-size:13px;font-weight:bold;cursor:pointer}
+#craftBox{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,#3a2010,#2a1810);border:3px solid #4a2a15;border-radius:16px;padding:16px;z-index:100;display:none;box-shadow:0 10px 40px rgba(0,0,0,.85);max-width:560px;width:92vw;max-height:80vh;overflow-y:auto}
+#craftBox.open{display:block}
+#craftBox h2{margin-bottom:12px;font-size:18px;text-align:center}
+.recipe{padding:10px 12px;border:2px solid #4a2a15;border-radius:10px;margin-bottom:8px;cursor:pointer;background:rgba(0,0,0,.25)}
+.recipe.can{border-color:#7a3f1a;background:rgba(120,60,20,.15)}
+.recipe.cant{opacity:.45}
+.recipe .name{font-weight:bold;margin-bottom:3px;font-size:14px}
+.recipe .cost{font-size:11px;color:#b89070}
+#closeCraft{width:100%;padding:11px;margin-top:6px;border:none;border-radius:10px;background:linear-gradient(135deg,#8b2020,#5a1010);color:#fff;font-size:14px;font-weight:bold;cursor:pointer}
+#message{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.85);color:#f4d4a0;padding:10px 22px;border-radius:12px;font-size:15px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .25s;z-index:150;border:1px solid rgba(255,180,80,.25)}
+#message.show{opacity:1}
+#saveIndicator{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(30,80,30,.95);color:#cfffcf;padding:12px 26px;border-radius:12px;font-size:16px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .3s;z-index:400;border:2px solid #4a9a4a}
+#saveIndicator.show{opacity:1}
+#gameOver{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:200;gap:16px;padding:20px}
+#gameOver.show{display:flex}
+#gameOver h1{color:#e74c3c;font-size:30px}
+#gameOver p{font-size:15px;color:#ccc}
+#gameOver button{padding:12px 30px;border-radius:12px;font-size:15px;font-weight:bold;margin:4px;cursor:pointer}
+#pauseMenu{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:300;gap:12px;padding:20px}
+#pauseMenu.show{display:flex}
+#pauseMenu h2{font-size:28px;margin-bottom:8px;letter-spacing:3px;color:#f4d4a0}
+#pauseMenu button{width:260px;padding:13px;border-radius:12px;font-size:15px;font-weight:bold}
+#saveBtn{background:linear-gradient(135deg,#2a5a2a,#1a3a1a)!important;border-color:#1a3a1a!important}
+#settingsMenu{position:fixed;inset:0;background:rgba(0,0,0,.94);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:350;gap:12px;padding:20px;overflow-y:auto}
+#settingsMenu.show{display:flex}
+#settingsMenu h2{font-size:24px;margin-bottom:8px;letter-spacing:3px;color:#f4d4a0}
+.settingsRow{width:100%;max-width:420px;background:rgba(60,30,15,.4);border:1px solid rgba(180,90,30,.25);border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.settingsRow label{font-size:14px;font-weight:600;color:#f4d4a0;flex:1}
+.settingsRow input[type=range]{flex:1;max-width:160px;-webkit-appearance:none;height:6px;background:#3a2010;border-radius:3px;outline:none}
+.settingsRow input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:#d9a066;border-radius:50%;cursor:pointer;border:2px solid #2a1508}
+.settingsRow .val{min-width:55px;text-align:right;font-size:13px;color:#d9a066;font-weight:bold}
+#settingsClose{width:260px;padding:13px;border-radius:12px;font-size:15px;font-weight:bold;margin-top:10px}
+#mainMenu{position:fixed;inset:0;background:linear-gradient(180deg,#1a0f08 0%,#2a1810 40%,#1a1a2e 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;gap:12px;padding:20px;overflow-y:auto}
+#mainMenu.hidden{display:none}
+#mainMenu .logo{font-size:46px;font-weight:900;letter-spacing:5px;background:linear-gradient(180deg,#f4d4a0 0%,#d9a066 30%,#9c5420 70%,#5a2e10 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px;text-align:center;line-height:1}
+#mainMenu .subtitle{color:#a08060;font-size:11px;letter-spacing:4px;margin-bottom:18px}
+.menuBtn{width:280px;max-width:85vw;padding:13px 20px;border-radius:14px;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px}
+#mainMenu .stats-block{color:#a08060;font-size:13px;margin-bottom:12px;text-align:center}
+#mainMenu .stats-block b{color:#ffb060}
+#saveInfo{font-size:11px;margin-top:4px;color:#7a6a5a}
+#mainMenu .version{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 10px);right:calc(env(safe-area-inset-right) + 14px);color:#6a5a4a;font-size:10px;letter-spacing:1.5px;text-align:right;line-height:1.5}
+#mainMenu .version div:first-child{color:#a08060;font-weight:bold}
+#ghost{position:fixed;pointer-events:none;z-index:999;transform:translate(-50%,-50%);display:none;filter:drop-shadow(0 0 8px rgba(255,200,80,.8))}
+#hint{position:fixed;bottom:calc(env(safe-area-inset-bottom) + 72px);left:50%;transform:translateX(-50%);color:#a08060;font-size:10px;letter-spacing:1px;z-index:5;text-align:center;pointer-events:none;display:none}
+#hint.show{display:block}
+</style>
+</head>
+<body>
+<div id="rotate"><div class="icon">📱</div><p><b>Поверни горизонтально</b></p></div>
+<canvas id="game"></canvas>
+<div id="hud">
+<div id="stats">
+<div class="bar"><div class="fill" id="hpFill"></div><div class="label">❤ Здоровье</div></div>
+<div class="bar"><div class="fill" id="hungerFill"></div><div class="label">🍖 Сытость</div></div>
+</div>
+<div id="leftInfo"><span id="fps">60 FPS</span><span id="dayInfo">📅 День 1</span></div>
+</div>
+<button id="menuBtn" class="rusty">☰</button>
+<button id="mapBtn" class="rusty">🗺</button>
+<div id="topBtns">
+<button id="craftBtn" class="rusty">🛠</button>
+<button id="bpBtn" class="rusty">🎒</button>
+</div>
+<div id="joyBase"><div id="joyStick"></div></div>
+<div id="actions"><button id="eatBtn" class="rusty">🍖</button><button id="attackBtn" class="rusty">⚔</button></div>
+<div id="hint">Тап — активировать · Долгий тап + тащи — переместить</div>
+<div id="hotbar"></div>
+<div id="backpack">
+<h2>🎒 ИНВЕНТАРЬ</h2>
+<div id="bpMain">
+<div id="bpChar">
+<canvas id="charCanvas" width="140" height="140"></canvas>
+<div id="charSlots">
+<div class="charSlot" data-eq="head"></div>
+<div class="charSlot" data-eq="chest"></div>
+<div class="charSlot" data-eq="legs"></div>
+<div class="charSlot" data-eq="feet"></div>
+</div>
+</div>
+<div id="bpGrid"></div>
+</div>
+<button id="bpClose">ЗАКРЫТЬ</button>
+</div>
+<div id="craftBox"><h2>🛠 ВЕРСТАК</h2><div id="recipeList"></div><button id="closeCraft">Закрыть</button></div>
+<div id="mapScreen">
+<h2>🗺 КАРТА МИРА</h2>
+<canvas id="mapCanvas" width="600" height="600"></canvas>
+<div class="hint">Карта обновляется в реальном времени</div>
+<button id="mapClose" class="rusty">Закрыть</button>
+</div>
+<div id="settingsMenu">
+<h2>⚙ НАСТРОЙКИ</h2>
+<div class="settingsRow"><label>🔊 Громкость</label><input type="range" id="setVolume" min="0" max="100" value="70"><div class="val" id="valVolume">70%</div></div>
+<div class="settingsRow"><label>📳 Вибрация</label><input type="range" id="setVibrate" min="0" max="1" value="1"><div class="val" id="valVibrate">Вкл</div></div>
+<div class="settingsRow"><label>🌙 Скорость дня</label><input type="range" id="setDaySpeed" min="1" max="3" value="2"><div class="val" id="valDaySpeed">Обычно</div></div>
+<div class="settingsRow"><label>🐺 Сложность</label><input type="range" id="setDiff" min="1" max="3" value="2"><div class="val" id="valDiff">Обычно</div></div>
+<button id="settingsClose" class="rusty">← Назад</button>
+</div>
+<div id="message"></div>
+<div id="saveIndicator">💾 Сохранено!</div>
+<div id="ghost"></div>
+<div id="gameOver"><h1>💀 ТЫ ПОГИБ</h1><p id="goStats"></p><button id="restartBtn" class="rusty">Играть снова</button><button id="toMenuBtn" class="rusty">В меню</button></div>
+<div id="pauseMenu">
+<h2>⏸ ПАУЗА</h2>
+<button id="resumeBtn" class="rusty">▶ Продолжить</button>
+<button id="saveBtn" class="rusty">💾 Сохранить игру</button>
+<button id="pauseSettingsBtn" class="rusty">⚙ Настройки</button>
+<button id="pauseToMenuBtn" class="rusty">🏠 Выйти в меню</button>
+</div>
+<div id="mainMenu">
+<div class="logo">GUST<br>SURVIVAL</div>
+<div class="subtitle">ВЫЖИВАЙ · СТРОЙ · СРАЖАЙСЯ</div>
+<div class="stats-block"><div>🏆 Рекорд: <b id="menuHigh">0</b> дней</div><div id="saveInfo"></div></div>
+<button class="menuBtn rusty" id="btnContinue" style="background:linear-gradient(135deg,#2a5a2a,#1a3a1a 30%,#0a2a0a 70%,#0a1a0a);font-size:18px;display:none">▶ ПРОДОЛЖИТЬ</button>
+<button class="menuBtn rusty" id="btnPlay" style="background:linear-gradient(135deg,#8b4a1a,#6b3a1a 30%,#4a2410 70%,#3a1e08);font-size:18px">▶ НОВАЯ ИГРА</button>
+<button class="menuBtn rusty" id="btnSettings" style="font-size:16px">⚙ НАСТРОЙКИ</button>
+<button class="menuBtn rusty" id="btnExit" style="background:linear-gradient(135deg,#8b2020,#5a1010 60%,#3a0808);color:#f0b0b0;font-size:16px">✕ ВЫХОД</button>
+<div class="version"><div>v1.0.2</div><div>Finik-Games</div><div>Made with HTML5</div></div>
+</div>
 
-  .rusty-btn {
-    position: relative;
-    background:
-      radial-gradient(circle at 25% 25%, rgba(255,200,100,0.22), transparent 55%),
-      radial-gradient(circle at 75% 75%, rgba(40,15,0,0.5), transparent 60%),
-      linear-gradient(135deg, #9c5420 0%, #7a3f1a 25%, #5a2e10 55%, #6b3a1a 80%, #4a2410 100%);
-    border: 2px solid #2a1508;
-    box-shadow:
-      inset 0 2px 4px rgba(255,180,80,0.18),
-      inset 0 -3px 8px rgba(0,0,0,0.55),
-      inset 0 0 20px rgba(120,60,20,0.3),
-      0 4px 10px rgba(0,0,0,0.65),
-      0 0 0 1px rgba(255,140,60,0.08);
-    color: #f4d4a0;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.9), 0 0 8px rgba(255,140,60,0.35);
-    transition: transform 0.08s, box-shadow 0.1s, filter 0.1s;
-    cursor: pointer;
-    touch-action: manipulation;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-  }
-  .rusty-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background-image:
-      radial-gradient(circle at 12% 78%, rgba(180,90,30,0.55) 1px, transparent 2.5px),
-      radial-gradient(circle at 58% 22%, rgba(200,100,40,0.45) 1.5px, transparent 3px),
-      radial-gradient(circle at 82% 62%, rgba(160,70,20,0.55) 1px, transparent 2.5px),
-      radial-gradient(circle at 35% 42%, rgba(220,120,50,0.35) 1px, transparent 2px),
-      radial-gradient(circle at 68% 85%, rgba(140,60,15,0.5) 1px, transparent 2px),
-      radial-gradient(circle at 22% 15%, rgba(200,110,50,0.3) 1px, transparent 2px);
-    pointer-events: none;
-    opacity: 0.85;
-    mix-blend-mode: overlay;
-  }
-  .rusty-btn::after {
-    content: '';
-    position: absolute;
-    inset: 2px;
-    border-radius: inherit;
-    background: linear-gradient(180deg, rgba(255,200,120,0.08) 0%, transparent 40%, transparent 60%, rgba(0,0,0,0.25) 100%);
-    pointer-events: none;
-  }
-  .rusty-btn:active {
-    transform: scale(0.93);
-    box-shadow:
-      inset 0 4px 10px rgba(0,0,0,0.75),
-      inset 0 -1px 3px rgba(255,180,80,0.1),
-      0 2px 5px rgba(0,0,0,0.55);
-    filter: brightness(0.88);
-  }
+<script>
+const ITEMS={stone:{icon:'🪨',name:'Камень',dmg:2},wood:{icon:'🪵',name:'Дерево'},food:{icon:'🍓',name:'Ягоды'},fiber:{icon:'🌾',name:'Волокно'},pickaxe:{icon:'⛏',name:'Кирка',dmg:3},axe:{icon:'🪓',name:'Топор',dmg:3},spear:{icon:'',name:'Копьё',dmg:4,custom:'spear'},hat:{icon:'🎩',name:'Шапка',eq:'head',def:5},chest:{icon:'👕',name:'Жилет',eq:'chest',def:5},legs:{icon:'👖',name:'Штаны',eq:'legs',def:5},sandals:{icon:'👡',name:'Сандалии',eq:'feet',def:5},campfire:{icon:'🔥',name:'Костёр'},wall:{icon:'🧱',name:'Стена'},bandage:{icon:'💊',name:'Бинт'}};
+const RECIPES=[{id:'campfire',name:'🔥 Костёр',cost:{wood:5,stone:3},desc:'Светит ночью'},{id:'wall',name:'🧱 Стена',cost:{wood:4},desc:'Ставит блок'},{id:'pickaxe',name:'⛏ Кирка',cost:{wood:3,stone:2},desc:'Быстро копает камень'},{id:'axe',name:'🪓 Топор',cost:{wood:3,stone:2},desc:'Быстро рубит дерево'},{id:'spear',name:'🗡 Копьё',cost:{wood:3,stone:2},desc:'Больше урона'},{id:'hat',name:'🎩 Шапка',cost:{fiber:3,wood:2},desc:'+5 защиты'},{id:'chest',name:'👕 Жилет',cost:{fiber:5,wood:2},desc:'+5 защиты'},{id:'legs',name:'👖 Штаны',cost:{fiber:5,wood:2},desc:'+5 защиты'},{id:'sandals',name:'👡 Сандалии',cost:{wood:3,fiber:1},desc:'+5 защиты'},{id:'bandage',name:'💊 Бинт',cost:{fiber:3},desc:'+40 HP'}];
+const HB=6,BP=18;
+let hotbar=new Array(HB).fill(null),backpack=new Array(BP).fill(null),activeSlot=0;
+let equipped={head:null,chest:null,legs:null,feet:null};
 
-  #rotate { position: fixed; inset: 0; background: #1a1a1a; display: none; align-items: center; justify-content: center; flex-direction: column; gap: 20px; z-index: 9999; color: #fff; padding: 30px; text-align: center; }
-  #rotate .icon { font-size: 80px; animation: rotateAnim 2s ease-in-out infinite; }
-  @keyframes rotateAnim { 0%, 30% { transform: rotate(0deg); } 70%, 100% { transform: rotate(90deg); } }
-  #rotate p { font-size: 18px; color: #ccc; line-height: 1.5; }
-  @media (orientation: portrait) { #rotate { display: flex; } }
+function itemHTML(item,size){
+if(item&&ITEMS[item.id]&&ITEMS[item.id].custom==='spear'){
+const s=size;
+return '<svg width="'+s+'" height="'+s+'" viewBox="-12 -26 24 52" style="pointer-events:none"><rect x="-2" y="-14" width="4" height="26" fill="#8b5a2b" stroke="#5a3a1a" stroke-width="0.6"/><polygon points="0,-24 -6,-13 6,-13" fill="#b8b8b8"/><polygon points="0,-24 6,-13 0,-13" fill="#808080"/><line x1="0" y1="-24" x2="0" y2="-13" stroke="#5a5a5a" stroke-width="0.5"/><rect x="-3" y="-13" width="6" height="2.2" fill="#3a2010"/><rect x="-3" y="-9.5" width="6" height="2.2" fill="#3a2010"/><rect x="-3" y="-6" width="6" height="2.2" fill="#3a2010"/></svg>';
+}
+return '<span class="icn">'+((ITEMS[item.id]||{icon:'?'}).icon)+'</span>';
+}
 
-  #hud { position: fixed; top: 0; left: 0; right: 0; padding: calc(env(safe-area-inset-top) + 8px) calc(env(safe-area-inset-right) + 14px) 8px calc(env(safe-area-inset-left) + 14px); display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; z-index: 10; display: none; }
-  #hud.show { display: flex; }
-  #stats { display: flex; flex-direction: column; gap: 5px; margin-left: 62px; }
-  .bar { width: 180px; height: 18px; background: rgba(0,0,0,0.6); border-radius: 9px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.15); }
-  .bar .fill { height: 100%; transition: width 0.15s; }
-  #hpFill { background: linear-gradient(90deg, #c0392b, #e74c3c); width: 100%; }
-  #hungerFill { background: linear-gradient(90deg, #b8860b, #f0c040); width: 100%; }
-  .bar .label { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 8px; font-size: 10px; color: #fff; text-shadow: 0 1px 2px #000; font-weight: 600; }
-  #info { text-align: right; color: #fff; text-shadow: 0 1px 3px #000; font-size: 13px; }
-  #dayInfo { font-weight: bold; margin-bottom: 5px; font-size: 14px; }
-  #fps { font-size: 11px; color: #7fff7f; font-weight: bold; background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 6px; display: inline-block; margin-bottom: 5px; font-variant-numeric: tabular-nums; }
-  #inventory { font-size: 12px; line-height: 1.6; }
-  #inventory span { display: inline-block; margin-left: 6px; background: rgba(0,0,0,0.4); padding: 1px 6px; border-radius: 6px; }
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d',{alpha:false});
+const charCanvas=document.getElementById('charCanvas'),charCtx=charCanvas.getContext('2d');
+const mapCanvas=document.getElementById('mapCanvas'),mapCtx=mapCanvas.getContext('2d');
+let W,H,DPR;
+function resize(){DPR=Math.min(window.devicePixelRatio||1,1.5);W=innerWidth;H=innerHeight;canvas.width=Math.floor(W*DPR);canvas.height=Math.floor(H*DPR);canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);buildGround();refreshPattern();}
+addEventListener('resize',resize);addEventListener('orientationchange',()=>setTimeout(resize,150));
+const rand=(a,b)=>a+Math.random()*(b-a),lerp=(a,b,t)=>a+(b-a)*t,clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const WORLD={w:2400,h:2400};
+let DAY_LEN=110,WOLF_DMG=10,WOLF_MAX=6,VIBRATE_ON=true;
 
-  #menuBtn { position: fixed; top: calc(env(safe-area-inset-top) + 8px); left: 50%; transform: translateX(-50%); z-index: 30; width: 48px; height: 48px; border-radius: 12px; font-size: 22px; display: none; }
-  #menuBtn.show { display: flex; }
-
-  #craftBtn { position: fixed; top: calc(env(safe-area-inset-top) + 8px); left: calc(env(safe-area-inset-left) + 14px); width: 52px; height: 52px; border-radius: 12px; font-size: 24px; z-index: 30; display: none; }
-  #craftBtn.show { display: flex; }
-
-  #joyBase { position: fixed; left: calc(env(safe-area-inset-left) + 20px); bottom: calc(env(safe-area-inset-bottom) + 20px); width: 130px; height: 130px; border-radius: 50%; background: rgba(255,255,255,0.07); border: 2px solid rgba(255,255,255,0.18); z-index: 20; touch-action: none; display: none; }
-  #joyBase.show { display: block; }
-  #joyStick { position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; margin: -29px 0 0 -29px; border-radius: 50%; background: rgba(255,255,255,0.35); border: 2px solid rgba(255,255,255,0.5); pointer-events: none; will-change: transform; }
-
-  #actions { position: fixed; right: calc(env(safe-area-inset-right) + 20px); bottom: calc(env(safe-area-inset-bottom) + 20px); display: none; flex-direction: row; gap: 14px; align-items: flex-end; z-index: 20; }
-  #actions.show { display: flex; }
-  #actions button { width: 72px; height: 72px; border-radius: 50%; font-size: 28px; }
-  #attackBtn { width: 88px; height: 88px; font-size: 36px; }
-
-  #craftMenu { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 100; padding: 15px; }
-  #craftMenu.open { display: flex; }
-  #craftBox { background: linear-gradient(180deg, #3a2010, #2a1810); border: 3px solid #4a2a15; border-radius: 16px; padding: 16px; max-width: 560px; width: 100%; max-height: 85vh; overflow-y: auto; color: #f4d4a0; box-shadow: inset 0 0 40px rgba(120,60,20,0.2), 0 10px 40px rgba(0,0,0,0.8); }
-  #craftBox h2 { margin-bottom: 12px; font-size: 18px; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.7); }
-  .recipe { padding: 10px 12px; border: 2px solid #4a2a15; border-radius: 10px; margin-bottom: 8px; cursor: pointer; background: rgba(0,0,0,0.25); }
-  .recipe.can { border-color: #7a3f1a; background: rgba(120,60,20,0.15); }
-  .recipe.cant { opacity: 0.45; }
-  .recipe:active { background: rgba(255,200,120,0.1); }
-  .recipe .name { font-weight: bold; margin-bottom: 3px; font-size: 14px; }
-  .recipe .cost { font-size: 11px; color: #b89070; }
-  #closeCraft { width: 100%; padding: 12px; margin-top: 6px; border: none; border-radius: 10px; background: linear-gradient(135deg, #8b2020, #5a1010); color: #fff; font-size: 15px; font-weight: bold; cursor: pointer; text-shadow: 0 1px 2px rgba(0,0,0,0.7); }
-  #closeCraft:active { filter: brightness(0.9); transform: scale(0.98); }
-
-  #message { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: #f4d4a0; padding: 10px 22px; border-radius: 12px; font-size: 16px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity 0.25s; z-index: 50; border: 1px solid rgba(255,180,80,0.2); text-shadow: 0 1px 2px #000; }
-  #message.show { opacity: 1; }
-
-  #gameOver { position: fixed; inset: 0; background: rgba(0,0,0,0.92); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 200; color: #fff; gap: 18px; padding: 20px; }
-  #gameOver.show { display: flex; }
-  #gameOver h1 { color: #e74c3c; font-size: 32px; text-shadow: 0 2px 10px rgba(231,76,60,0.5); }
-  #gameOver p { font-size: 16px; color: #ccc; }
-  #gameOver button { padding: 14px 40px; font-size: 17px; border: none; border-radius: 12px; font-weight: bold; margin: 4px; cursor: pointer; }
-
-  #mainMenu { position: fixed; inset: 0; background: linear-gradient(180deg, #1a0f08 0%, #2a1810 40%, #1a1a2e 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 500; color: #fff; gap: 15px; padding: 20px; overflow-y: auto; }
-  #mainMenu.hidden { display: none; }
-  #mainMenu .logo {
-    font-size: 48px;
-    font-weight: 900;
-    letter-spacing: 6px;
-    background: linear-gradient(180deg, #f4d4a0 0%, #d9a066 30%, #9c5420 70%, #5a2e10 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 8px;
-    text-shadow: 0 4px 30px rgba(200,100,40,0.6);
-    animation: logoPulse 3s ease-in-out infinite;
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
-  }
-  @keyframes logoPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
-  #mainMenu .subtitle { color: #a08060; font-size: 12px; letter-spacing: 4px; margin-bottom: 30px; text-transform: uppercase; }
-
-  .menuBtn { width: 280px; max-width: 85vw; padding: 16px 20px; border-radius: 14px; font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; }
-  .menuBtn.primary { font-size: 20px; }
-
-  #mainMenu .version {
-    position: absolute;
-    bottom: calc(env(safe-area-inset-bottom) + 10px);
-    right: calc(env(safe-area-inset-right) + 14px);
-    color: #6a5a4a;
-    font-size: 10px;
-    letter-spacing: 1.5px;
+const AC=window.AudioContext||window.webkitAudioContext;let audioCtx=null,masterGain=null,soundOn=true,curVol=0.7;
+function initAudio(){if(audioCtx)return;try{audioCtx=new AC();masterGain=audioCtx.createGain();masterGain.gain.value=curVol;masterGain.connect(audioCtx.destination);}catch(e){audioCtx=null;}}
+function ensureAudio(){initAudio();if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});}
+function beep(f,d,t,v){if(!soundOn||!audioCtx)return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=t||'square';o.frequency.value=f;g.gain.setValueAtTime(v||.13,audioCtx.currentTime);g.g: 1.5px;
     text-align: right;
     line-height: 1.5;
     text-transform: uppercase;
