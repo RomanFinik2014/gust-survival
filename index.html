@@ -1,669 +1,281 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>PixelGust</title>
-<style>
-* { margin:0; padding:0; box-sizing:border-box; touch-action:none; user-select:none; -webkit-user-select:none; }
-body { overflow:hidden; background:#87CEEB; font-family:Arial,sans-serif; }
-canvas { display:block; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gust Survival</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #111; font-family: 'Arial', sans-serif; user-select: none; touch-action: none; }
+        canvas { display: block; }
+        
+        .menu-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, #2a2a2a 0%, #111 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white; overflow-y: auto; padding: 20px 0; box-sizing: border-box; }
+        .menu-screen.hidden { display: none; }
+        
+        h1 { font-size: 38px; margin: 0; color: #ffcc00; text-shadow: 0 0 20px #ffcc00; text-align: center; font-weight: 900; }
+        h2 { font-size: 18px; color: #aaa; margin-bottom: 15px; text-transform: uppercase; }
+        
+        .cc-balance { font-size: 22px; color: #00ffcc; font-weight: bold; margin-bottom: 15px; text-shadow: 0 0 10px #00ffcc; }
+        
+        .menu-btn { width: 80%; max-width: 300px; padding: 15px; margin: 6px 0; background: linear-gradient(90deg, #333 0%, #555 100%); border: 2px solid #ffcc00; border-radius: 5px; color: white; font-size: 16px; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
+        .menu-btn:active { background: #ffcc00; color: black; transform: scale(0.95); }
+        .menu-btn.back { border-color: #ff4500; font-size: 14px; padding: 10px; margin-top: 15px;}
+        .menu-btn.back:active { background: #ff4500; }
+        .menu-btn.buy { border-color: #00ffcc; background: linear-gradient(90deg, #004d40 0%, #00897b 100%); }
+        .menu-btn.equip { border-color: #4CAF50; background: #2E7D32; font-size: 14px; width: 100%; padding: 10px;}
+        .menu-btn.equipped { border-color: #888; background: #333; color: #888; }
+        .menu-btn.logout { border-color: #d9534f; background: #d9534f; font-size: 12px; padding: 5px 10px; width: auto; position: absolute; top: 15px; left: 15px; }
 
-#cross {
-  position:fixed; top:50%; left:50%;
-  transform:translate(-50%,-50%);
-  width:6px; height:6px;
-  background:#fff; border-radius:50%;
-  box-shadow:0 0 3px #000;
-  z-index:15; pointer-events:none;
-}
+        .input-field { width: 80%; max-width: 300px; padding: 12px; margin: 5px 0; border-radius: 5px; border: 2px solid #555; background: #222; color: white; font-size: 16px; outline: none; text-align: center; }
+        .input-field:focus { border-color: #4CAF50; }
+        #authMessage, #mpMessage { color: #ff4500; font-weight: bold; margin: 10px 0; height: 20px; text-align: center; font-size: 14px;}
+        .user-info { position: absolute; top: 15px; right: 15px; color: #4CAF50; font-weight: bold; font-size: 16px; }
 
-#hud {
-  position:fixed; top:10px; left:10px;
-  color:#fff; font-size:14px;
-  text-shadow:1px 1px 3px #000;
-  z-index:10; pointer-events:none; line-height:1.6;
-}
+        .shop-container { width: 90%; max-width: 350px; display: flex; flex-direction: column; align-items: center; }
+        .case-box { background: #222; border: 3px solid #ffcc00; border-radius: 10px; padding: 20px; width: 100%; text-align: center; margin-bottom: 20px; box-shadow: 0 0 15px rgba(255, 204, 0, 0.3); }
+        .case-box h3 { margin: 0 0 10px 0; color: #ffcc00; font-size: 24px; }
+        .case-box p { color: #aaa; font-size: 14px; margin-bottom: 15px; }
+        
+        .inventory-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+        .inv-item { background: #333; border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; border: 1px solid #555; }
+        .inv-item.active { border-color: #4CAF50; box-shadow: 0 0 10px #4CAF50; }
+        .inv-name { font-size: 14px; font-weight: bold; margin-bottom: 5px; }
+        
+        #revealScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 150; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        #revealBox { font-size: 40px; font-weight: bold; color: #fff; text-shadow: 0 0 20px #fff; transform: scale(0.5); opacity: 0; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-align: center; padding: 20px; }
+        #revealBox.show { transform: scale(1); opacity: 1; }
+        #revealName { font-size: 24px; margin-top: 10px; display: block; }
 
-#joy {
-  position:fixed; bottom:110px; left:25px;
-  width:110px; height:110px;
-  border-radius:50%;
-  background:rgba(255,255,255,0.12);
-  border:2px solid rgba(255,255,255,0.5);
-  z-index:20;
-}
-#knob {
-  position:absolute; top:50%; left:50%;
-  width:45px; height:45px;
-  border-radius:50%;
-  background:rgba(255,255,255,0.65);
-  border:2px solid #fff;
-  transform:translate(-50%,-50%);
-}
+        .setting-item { width: 80%; max-width: 300px; display: flex; flex-direction: column; margin-bottom: 10px; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 8px; border: 1px solid #444; }
+        .setting-item label { font-size: 14px; margin-bottom: 5px; display: flex; justify-content: space-between; color: #ddd; }
+        .setting-item input[type=range] { width: 100%; cursor: pointer; accent-color: #ffcc00; }
+        .toggle-group { display: flex; gap: 5px; margin-top: 5px; }
+        .toggle-btn { flex: 1; padding: 8px; background: #333; border: 1px solid #555; color: #aaa; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; text-align: center; }
+        .toggle-btn.active { background: #ffcc00; border-color: #ffcc00; color: black; }
 
-.btn {
-  position:fixed;
-  border-radius:50%;
-  background:rgba(0,0,0,0.4);
-  border:2px solid rgba(255,255,255,0.8);
-  color:#fff;
-  font-size:12px;
-  font-weight:bold;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  z-index:20;
-  text-shadow:1px 1px 2px #000;
-}
-.btn:active { background:rgba(255,255,255,0.5); color:#000; }
+        #crosshair-container { position: absolute; top: 50%; left: 50%; width: 0; height: 0; pointer-events: none; z-index: 10; }
+        .ch-line { position: absolute; background-color: #00ff00; box-shadow: 0 0 2px rgba(0,0,0,0.8); }
+        #ch-dot { position: absolute; background-color: #00ff00; border-radius: 50%; box-shadow: 0 0 2px rgba(0,0,0,0.8); transform: translate(-50%, -50%); display: none; }
 
-#act    { bottom:30px;  right:25px;  width:78px; height:78px; }
-#jump   { bottom:120px; right:25px;  width:70px; height:70px; }
-#craftBtn { bottom:120px; right:105px; width:70px; height:70px; font-size:11px; }
-#crouch { bottom:200px; right:25px;  width:70px; height:70px; font-size:10px; }
-#mapBtn { bottom:200px; right:105px; width:70px; height:70px; font-size:11px; }
+        #hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: none; }
+        #hitMarker { position: absolute; top: 50%; left: 50%; width: 24px; height: 24px; border: 2px solid red; transform: translate(-50%, -50%) rotate(45deg); display: none; }
+        
+        #topUI { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: flex-start; font-size: 18px; font-weight: bold; text-shadow: 2px 2px 2px black; }
+        #teamScore { display: flex; gap: 15px; background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 10px; border: 2px solid #555; }
+        .score-blue { color: #00bfff; font-size: 20px; }
+        .score-red { color: #ff4500; font-size: 20px; }
+        #timerDisplay { background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 10px; border: 2px solid #555; color: #ffcc00; font-size: 20px; }
+        
+        #healthContainer { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: 200px; height: 20px; background: rgba(0,0,0,0.5); border: 2px solid white; border-radius: 10px; overflow: hidden; }
+        #healthBar { width: 100%; height: 100%; background: #00ff00; transition: width 0.3s; }
+        #healthText { position: absolute; width: 100%; text-align: center; top: 0; line-height: 20px; color: white; font-size: 14px; font-weight: bold; text-shadow: 1px 1px 1px black;}
 
-#pauseBtn {
-  position:fixed; top:10px; right:10px;
-  width:44px; height:44px;
-  background:rgba(0,0,0,0.4);
-  border:2px solid rgba(255,255,255,0.7);
-  border-radius:6px;
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  gap:5px;
-  z-index:25;
-}
-#pauseBtn span {
-  display:block;
-  width:20px; height:3px;
-  background:#fff;
-  border-radius:2px;
-}
-#pauseBtn:active { background:rgba(0,0,0,0.8); }
+        #damageOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 0, 0, 0.4); opacity: 0; transition: opacity 0.1s; }
 
-#hotbar {
-  position:fixed;
-  bottom:10px; left:50%;
-  transform:translateX(-50%);
-  display:flex;
-  gap:6px;
-  z-index:25;
-}
-.slot {
-  width:56px; height:56px;
-  background:rgba(0,0,0,0.55);
-  border:2px solid rgba(255,255,255,0.5);
-  border-radius:6px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  font-size:26px;
-  color:#fff;
-  transition:transform 0.1s, border-color 0.15s;
-}
-.slot.sel { border-color:#ffd54a; }
-.slot .cnt {
-  position:absolute;
-  bottom:2px; right:5px;
-  font-size:11px; font-weight:bold;
-  color:#fff;
-  text-shadow:1px 1px 2px #000;
-}
-.slot.drag { transform:scale(1.15); border-color:#fff; }
-.slot.drop { border-color:#7cff7c; }
+        #ammoCounter { position: absolute; bottom: 105px; right: 140px; color: white; font-size: 20px; font-weight: bold; text-shadow: 2px 2px 4px black; pointer-events: none; text-align: right; z-index: 11; }
+        #ammoCounter.reloading { color: #ffcc00; font-size: 14px; }
+        #shootBtn { position: absolute; bottom: 30px; right: 30px; width: 80px; height: 80px; border-radius: 50%; background-color: rgba(220, 20, 60, 0.8); border: 3px solid white; color: white; font-size: 16px; font-weight: bold; display: flex; justify-content: center; align-items: center; pointer-events: auto; z-index: 11; }
+        #shootBtn:active { background-color: rgba(255, 0, 0, 1); }
+        #jumpBtn { position: absolute; bottom: 120px; right: 30px; width: 70px; height: 70px; border-radius: 50%; background-color: rgba(30, 144, 255, 0.8); border: 3px solid white; color: white; font-size: 14px; font-weight: bold; display: flex; justify-content: center; align-items: center; pointer-events: auto; z-index: 11; }
+        #jumpBtn:active { background-color: rgba(30, 144, 255, 1); }
+        #reloadBtn { position: absolute; bottom: 30px; right: 130px; width: 60px; height: 60px; border-radius: 50%; background-color: rgba(255, 204, 0, 0.8); border: 3px solid white; color: white; font-size: 12px; font-weight: bold; display: flex; justify-content: center; align-items: center; pointer-events: auto; z-index: 11; }
+        #reloadBtn:active { background-color: rgba(255, 204, 0, 1); }
+        #reloadBtn.reloading { background-color: #555; color: #aaa; }
 
-.screen {
-  position:fixed; inset:0;
-  background:rgba(0,0,0,0.9);
-  z-index:100;
-  display:none;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:20px;
-  color:#fff;
-}
-.screen.show { display:flex; }
+        #joystickZone { position: absolute; bottom: 30px; left: 30px; width: 120px; height: 120px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255, 255, 255, 0.5); pointer-events: auto; z-index: 11; }
+        #joystickKnob { position: absolute; top: 50%; left: 50%; width: 50px; height: 50px; background-color: rgba(255, 255, 255, 0.6); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; }
 
-#mainMenu { background:#141414; }
-#mainMenu h1 {
-  font-size:36px; letter-spacing:6px;
-  color:#e0a860; margin-bottom:4px;
-}
-#mainMenu p {
-  color:#555; font-size:11px;
-  letter-spacing:3px; margin-bottom:30px;
-}
-.menuBtn {
-  background:rgba(255,255,255,0.1);
-  border:2px solid #fff;
-  color:#fff;
-  padding:14px 50px;
-  border-radius:6px;
-  font-size:15px; font-weight:bold;
-  letter-spacing:1px; min-width:220px;
-  text-align:center;
-}
-.menuBtn:active { background:rgba(255,255,255,0.35); color:#000; }
+        .editable { border: 3px dashed #ffcc00 !important; box-shadow: 0 0 15px #ffcc00; pointer-events: auto !important; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 5px; }
+        #saveBtn { display: none; position: absolute; top: 20px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 20px; background-color: #4CAF50; border: 2px solid white; color: white; font-weight: bold; font-size: 16px; cursor: pointer; pointer-events: auto; z-index: 50; }
 
-#pauseMenu h2, #mapMenu h2, #craftMenu h2 {
-  font-size:22px; letter-spacing:4px;
-  color:#e0a860; margin-bottom:20px;
-}
-
-.craftSection {
-  font-size:13px;
-  letter-spacing:3px;
-  color: #e0a860;
-  margin-top: 10px;
-  margin-bottom: 4px;
-  text-align: center;
-  width: 100%;
-  font-weight: bold;
-}
-
-.craftRow {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:20px;
-  background:rgba(255,255,255,0.08);
-  border:2px solid rgba(255,255,255,0.3);
-  border-radius:8px;
-  padding:12px 18px;
-  min-width:300px;
-}
-.craftRow.research {
-  border-color: #5a9ae0;
-  background: rgba(90,154,224,0.12);
-}
-.craftRow.done {
-  border-color: #4a7c2f;
-  background: rgba(74,124,47,0.18);
-}
-.craftInfo { text-align:left; }
-.craftName { font-size:15px; font-weight:bold; }
-.craftCost { font-size:12px; color:#aaa; margin-top:2px; }
-.craftMake {
-  background:rgba(255,255,255,0.15);
-  border:2px solid #fff;
-  color:#fff;
-  padding:8px 18px;
-  border-radius:6px;
-  font-size:13px;
-  font-weight:bold;
-}
-.craftMake:disabled { opacity:0.3; }
-.craftMake:active:not(:disabled) { background:rgba(255,255,255,0.5); color:#000; }
-
-#bigMapWrap {
-  background:rgba(0,0,0,0.4);
-  border:3px solid rgba(255,255,255,0.7);
-  border-radius:10px;
-  overflow:hidden;
-}
-#bigMapCanvas { display:block; width:340px; height:340px; image-rendering:pixelated; }
-#bigMapCoords {
-  margin-top:14px; font-size:14px;
-  letter-spacing:1px; color:#ddd;
-}
-#mapMenu .legend {
-  font-size:11px; color:#999;
-  margin-top:8px; text-align:center;
-  max-width:340px;
-}
-
-#settingsMenu {
-  justify-content:flex-start;
-  padding:0;
-  background:rgba(0,0,0,0.95);
-}
-#settingsTop {
-  width:100%;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:12px 16px;
-  background:rgba(255,255,255,0.05);
-  border-bottom:2px solid rgba(224,168,96,0.4);
-  flex-shrink:0;
-}
-#settingsTop h2 {
-  font-size:18px;
-  letter-spacing:3px;
-  color:#e0a860;
-  margin:0;
-}
-#settingsClose {
-  background:#7a2222;
-  border:none;
-  color:#fff;
-  width:36px;
-  height:36px;
-  border-radius:6px;
-  font-size:18px;
-  font-weight:bold;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-#settingsClose:active { background:#a33; }
-
-.settingsBody {
-  width:100%;
-  max-width:520px;
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  padding:12px 14px 20px;
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-}
-.setRow {
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  background:rgba(255,255,255,0.06);
-  border:1px solid rgba(255,255,255,0.15);
-  border-radius:8px;
-  padding:10px 12px;
-}
-.setLabel {
-  display:flex;
-  justify-content:space-between;
-  font-size:12px;
-  color:#ccc;
-  letter-spacing:0.5px;
-}
-.setLabel span:last-child { color:#e0a860; font-weight:bold; }
-.setOptions {
-  display:flex;
-  gap:6px;
-  flex-wrap:wrap;
-}
-.optBtn {
-  flex:1;
-  min-width:60px;
-  background:rgba(255,255,255,0.08);
-  border:2px solid rgba(255,255,255,0.25);
-  color:#ccc;
-  padding:8px 6px;
-  border-radius:6px;
-  font-size:11px;
-  font-weight:bold;
-  text-align:center;
-  letter-spacing:0.5px;
-}
-.optBtn.active {
-  background:rgba(224,168,96,0.3);
-  border-color:#e0a860;
-  color:#fff;
-}
-.optBtn:active { background:rgba(255,255,255,0.3); }
-input[type=range] {
-  width:100%;
-  height:28px;
-  accent-color:#e0a860;
-}
-</style>
+        .damage-text { position: absolute; color: #fff; font-size: 18px; font-weight: bold; pointer-events: none; z-index: 15; text-shadow: 1px 1px 3px black; animation: floatUp 0.6s ease-out forwards; }
+        .damage-text.headshot { color: #ff0000; font-size: 24px; }
+        @keyframes floatUp { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; } 100% { transform: translate(-50%, -150%) scale(1); opacity: 0; } }
+        
+        #roomCodeDisplay { font-size: 32px; color: #00ffcc; letter-spacing: 5px; margin: 15px 0; font-weight: bold; text-shadow: 0 0 10px #00ffcc; display: none; }
+    </style>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
-
-<div id="cross"></div>
-
-<div id="hud">
-  <div>🪵 <span id="w">0</span></div>
-  <div>🪨 <span id="s">0</span></div>
-  <div>⚙️ <span id="sc">0</span></div>
-</div>
-
-<div id="joy"><div id="knob"></div></div>
-<div class="btn" id="act">ДОБЫТЬ</div>
-<div class="btn" id="jump">ПРЫЖОК</div>
-<div class="btn" id="crouch">ПРИСЕД</div>
-<div class="btn" id="craftBtn">КРАФТ</div>
-<div class="btn" id="mapBtn">КАРТА</div>
-<div id="pauseBtn"><span></span><span></span><span></span></div>
-
-<div id="hotbar"></div>
-
-<div class="screen show" id="mainMenu">
-  <h1>PIXELGUST</h1>
-  <p>SURVIVAL</p>
-  <div class="menuBtn" id="playBtn">ИГРАТЬ</div>
-  <div class="menuBtn" id="settingsBtn">НАСТРОЙКИ</div>
-</div>
-
-<div class="screen" id="settingsMenu">
-  <div id="settingsTop">
-    <h2>НАСТРОЙКИ</h2>
-    <button id="settingsClose">✕</button>
-  </div>
-  <div class="settingsBody">
-    <div class="setRow">
-      <div class="setLabel"><span>ГРАФИКА</span><span id="qualityVal">СРЕДНЯЯ</span></div>
-      <div class="setOptions" id="qualityOpts">
-        <div class="optBtn" data-q="low">НИЗКАЯ</div>
-        <div class="optBtn active" data-q="medium">СРЕДНЯЯ</div>
-        <div class="optBtn" data-q="high">ВЫСОКАЯ</div>
-        <div class="optBtn" data-q="ultra">УЛЬТРА</div>
-      </div>
+    <div id="loginScreen" class="menu-screen">
+        <h1>FINIK ID</h1>
+        <h2>Вход в систему</h2>
+        <input type="text" id="nickInput" class="input-field" placeholder="Твой Никнейм" autocomplete="off">
+        <input type="password" id="passInput" class="input-field" placeholder="Пароль">
+        <div id="authMessage"></div>
+        <button id="loginBtn" class="menu-btn">ВОЙТИ</button>
+        <button id="registerBtn" class="menu-btn" style="border-color: #00ffcc; color: #00ffcc;">РЕГИСТРАЦИЯ</button>
     </div>
-    <div class="setRow">
-      <div class="setLabel"><span>ДАЛЬНОСТЬ</span><span id="distVal">150</span></div>
-      <input type="range" id="distRange" min="60" max="400" value="150" step="10">
+
+    <div id="mainMenu" class="menu-screen hidden">
+        <button id="logoutBtn" class="menu-btn logout">ВЫЙТИ</button>
+        <div id="userDisplay" class="user-info">Игрок</div>
+        
+        <h1>GUST SURVIVAL</h1>
+        <div class="cc-balance">Баланс: <span id="menuCC">0</span> CC</div>
+        <button id="playMenuBtn" class="menu-btn">ОДИНОЧНАЯ ИГРА</button>
+        <button id="mpMenuBtn" class="menu-btn" style="border-color: #ff00ff; color: #ff00ff;">СЕТЕВАЯ ИГРА (1v1)</button>
+        <button id="shopMenuBtn" class="menu-btn" style="border-color: #00ffcc; color: #00ffcc;">КЕЙСЫ И СКИНЫ</button>
+        <button id="settingsBtnMain" class="menu-btn">НАСТРОЙКИ</button>
     </div>
-    <div class="setRow">
-      <div class="setLabel"><span>ТУМАН</span><span id="fogVal">ВКЛ</span></div>
-      <div class="setOptions" id="fogOpts">
-        <div class="optBtn" data-f="off">ВЫКЛ</div>
-        <div class="optBtn active" data-f="on">ВКЛ</div>
-      </div>
+
+    <div id="mpMenu" class="menu-screen hidden">
+        <h1>СЕТЕВАЯ ИГРА</h1>
+        <div id="mpMessage"></div>
+        <button id="hostBtn" class="menu-btn">СОЗДАТЬ ИГРУ</button>
+        <div id="roomCodeDisplay"></div>
+        <input type="text" id="joinCodeInput" class="input-field" placeholder="Введи код друга" autocomplete="off">
+        <button id="joinBtn" class="menu-btn">ПОДКЛЮЧИТЬСЯ</button>
+        <button id="btnBackFromMp" class="menu-btn back">НАЗАД</button>
     </div>
-    <div class="setRow">
-      <div class="setLabel"><span>ТЕНИ</span><span id="shadowVal">ВЫКЛ</span></div>
-      <div class="setOptions" id="shadowOpts">
-        <div class="optBtn active" data-s="off">ВЫКЛ</div>
-        <div class="optBtn" data-s="on">ВКЛ</div>
-      </div>
+
+    <div id="shopMenu" class="menu-screen hidden">
+        <h1>МАГАЗИН</h1>
+        <div class="cc-balance">Баланс: <span id="shopCC">0</span> CC</div>
+        <div class="shop-container">
+            <div class="case-box">
+                <h3>КЕЙС "ЗОЛОТОЙ КАЛАШ"</h3>
+                <p>Внутри: Camo (Серый) или Hinji (Розовый)</p>
+                <button id="openCaseBtn" class="menu-btn buy">ОТКРЫТЬ ЗА 200 CC</button>
+            </div>
+            <h2>ТВОИ СКИНЫ</h2>
+            <div class="inventory-grid" id="inventoryGrid"></div>
+        </div>
+        <button id="btnBackFromShop" class="menu-btn back">НАЗАД В МЕНЮ</button>
     </div>
-    <div class="setRow">
-      <div class="setLabel"><span>ЖЁСТКОЕ СОЛНЦЕ</span><span id="harshVal">ВКЛ</span></div>
-      <div class="setOptions" id="harshOpts">
-        <div class="optBtn" data-h="off">ВЫКЛ</div>
-        <div class="optBtn active" data-h="on">ВКЛ</div>
-      </div>
+
+    <div id="revealScreen">
+        <div id="revealBox">ВЫПАЛО!<span id="revealName">Camo</span></div>
+        <button id="closeRevealBtn" class="menu-btn equip" style="margin-top: 30px; width: 200px;">ЗАБРАТЬ</button>
     </div>
-    <div class="setRow">
-      <div class="setLabel"><span>РАЗРЕШЕНИЕ</span><span id="resVal">100%</span></div>
-      <input type="range" id="resRange" min="50" max="100" value="100" step="5">
+
+    <div id="modeMenu" class="menu-screen hidden">
+        <h1>ВЫБЕРИ РЕЖИМ</h1>
+        <button id="btnRange" class="menu-btn">СТРЕЛЬБИЩЕ</button>
+        <button id="btnTDM" class="menu-btn">КОМАНДНЫЙ БОЙ (5v5)</button>
+        <button id="btnBackToMain" class="menu-btn back">НАЗАД</button>
     </div>
-  </div>
-</div>
 
-<div class="screen" id="pauseMenu">
-  <h2>ПАУЗА</h2>
-  <div class="menuBtn" id="resumeBtn">ПРОДОЛЖИТЬ</div>
-  <div class="menuBtn" id="pauseSettingsBtn">НАСТРОЙКИ</div>
-  <div class="menuBtn" id="exitBtn">ВЫЙТИ В МЕНЮ</div>
-</div>
+    <div id="settingsMenu" class="menu-screen hidden">
+        <h1>НАСТРОЙКИ</h1>
+        <div class="setting-item">
+            <label>Чувствительность <span id="sensVal">1.0</span></label>
+            <input type="range" id="sensSlider" min="0.2" max="2.0" step="0.1" value="1.0">
+        </div>
+        <div class="setting-item">
+            <label>Прозрачность <span id="opacVal">80%</span></label>
+            <input type="range" id="opacSlider" min="0.1" max="1.0" step="0.1" value="0.8">
+        </div>
+        <div class="setting-item">
+            <label>Размер кнопок <span id="sizeVal">100%</span></label>
+            <input type="range" id="sizeSlider" min="0.5" max="1.5" step="0.1" value="1.0">
+        </div>
+        <div class="setting-item" style="border-color: #00ffcc;">
+            <label style="color: #00ffcc; font-weight: bold;">ПРИЦЕЛ</label>
+            <label style="margin-top: 5px;">Размер / Длина линий <span id="chSizeVal">10</span></label>
+            <input type="range" id="chSizeSlider" min="2" max="25" step="1" value="10">
+            <label style="margin-top: 5px;">Толщина <span id="chThickVal">2</span></label>
+            <input type="range" id="chThickSlider" min="1" max="6" step="1" value="2">
+            <label style="margin-top: 5px;">Стиль</label>
+            <div class="toggle-group">
+                <div class="toggle-btn active" id="btnStyleCross">КРЕСТ</div>
+                <div class="toggle-btn" id="btnStyleT">Т-ОБРАЗНЫЙ</div>
+                <div class="toggle-btn" id="btnStyleDot">ТОЧКА</div>
+            </div>
+            <label style="margin-top: 5px;">Тип</label>
+            <div class="toggle-group">
+                <div class="toggle-btn active" id="btnTypeStatic">СТАТИЧЕСКИЙ</div>
+                <div class="toggle-btn" id="btnTypeDynamic">ДИНАМИЧЕСКИЙ</div>
+            </div>
+        </div>
+        <button id="btnCustomize" class="menu-btn" style="border-color: #00ffcc; margin-top: 10px;">РАСПОЛОЖЕНИЕ ЭЛЕМЕНТОВ</button>
+        <button id="btnBackFromSettings" class="menu-btn back">НАЗАД</button>
+    </div>
 
-<div class="screen" id="craftMenu">
-  <h2 id="craftTitle">КРАФТ</h2>
-  <div id="craftList"></div>
-  <div class="menuBtn" id="craftClose" style="margin-top:10px;">ЗАКРЫТЬ</div>
-</div>
+    <div id="gameOverScreen" class="menu-screen hidden">
+        <h1 id="gameOverTitle">КОНЕЦ МАТЧА</h1>
+        <h2 id="gameOverSub">Счет: 0 - 0</h2>
+        <div class="cc-balance" style="font-size: 20px;">Награда: <span id="rewardCC">0</span> CC</div>
+        <button id="btnRestart" class="menu-btn">ИГРАТЬ СНОВА</button>
+        <button id="btnBackToMenu" class="menu-btn back">В МЕНЮ</button>
+    </div>
 
-<div class="screen" id="mapMenu">
-  <h2>КАРТА 500×500</h2>
-  <div id="bigMapWrap">
-    <canvas id="bigMapCanvas" width="500" height="500"></canvas>
-  </div>
-  <div id="bigMapCoords">A1</div>
-  <div class="legend">🟩 ты 🟫 дерево ⬜ камень 🟨 заправка 🟤 бочки 🌊 океан</div>
-  <div class="menuBtn" id="mapClose" style="margin-top:10px;">ЗАКРЫТЬ</div>
-</div>
+    <div id="hud">
+        <div id="saveBtn">СОХРАНИТЬ</div>
+        <div id="damageOverlay"></div>
+        <div id="topUI">
+            <div id="teamScore">
+                <span class="score-blue" id="scoreBlue">0</span>
+                <span style="color:white; font-size: 16px; line-height: 30px;">VS</span>
+                <span class="score-red" id="scoreRed">0</span>
+            </div>
+            <div id="timerDisplay">02:30</div>
+        </div>
+        <div id="crosshair-container">
+            <div class="ch-line" id="ch-top"></div>
+            <div class="ch-line" id="ch-bottom"></div>
+            <div class="ch-line" id="ch-left"></div>
+            <div class="ch-line" id="ch-right"></div>
+            <div id="ch-dot"></div>
+        </div>
+        <div id="hitMarker"></div>
+        <div id="healthContainer">
+            <div id="healthBar"></div>
+            <div id="healthText">100 HP</div>
+        </div>
+        <div id="ammoCounter">30 / 170</div>
+        <div id="reloadBtn">ПЕРЕЗАРЯДКА</div>
+        <div id="joystickZone"><div id="joystickKnob"></div></div>
+        <div id="shootBtn">ОГОНЬ</div>
+        <div id="jumpBtn">ПРЫЖОК</div>
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script>
-const settings = {
-  quality: 'medium',
-  drawDistance: 150,
-  fog: true,
-  shadows: false,
-  harshSun: true,
-  renderRes: 100
-};
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x9ac6e0);
-scene.fog = new THREE.Fog(0x9ac6e0, 60, 150);
+    <script>
+        // ==========================================
+        // 1. БАЗА ДАННЫХ FINIK ID
+        // ==========================================
+        const skinsDB = {
+            'default': { name: 'Стандарт', wood: 0x8B4513, metal: 0x333333, rarity: 'Обычный', color: '#fff' },
+            'camo': { name: 'Camouflage', wood: 0x556B2F, metal: 0x2F4F4F, rarity: 'Редкий', color: '#00ffcc' },
+            'hinji': { name: 'Hinji', wood: 0xFF69B4, metal: 0x8B008B, rarity: 'Эпический', color: '#ff00ff' }
+        };
 
-const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 2000);
-camera.rotation.order = 'YXZ';
-scene.add(camera);
+        let currentUser = localStorage.getItem('currentFinikID') || null;
+        let ccBalance = 0, ownedSkins = ['default'], equippedSkin = 'default';
 
-const renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(innerWidth, innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.shadowMap.enabled = false;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-document.body.appendChild(renderer.domElement);
+        function getUsersDB() { return JSON.parse(localStorage.getItem('finikID_DB')) || {}; }
+        function saveUsersDB(db) { localStorage.setItem('finikID_DB', JSON.stringify(db)); }
+        function loadUserData(nick) {
+            const db = getUsersDB();
+            if (db[nick]) { currentUser = nick; ccBalance = db[nick].cc || 0; ownedSkins = db[nick].skins || ['default']; equippedSkin = db[nick].equipped || 'default'; updateCCUI(); }
+        }
+        function saveUserData() {
+            if (!currentUser) return;
+            const db = getUsersDB(); db[currentUser] = { cc: ccBalance, skins: ownedSkins, equipped: equippedSkin }; saveUsersDB(db);
+        }
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-scene.add(ambientLight);
-const sun = new THREE.DirectionalLight(0xffffff, 1);
-sun.position.set(60, 100, 40);
-sun.castShadow = false;
-sun.shadow.mapSize.width = 2048;
-sun.shadow.mapSize.height = 2048;
-sun.shadow.camera.left = -150;
-sun.shadow.camera.right = 150;
-sun.shadow.camera.top = 150;
-sun.shadow.camera.bottom = -150;
-sun.shadow.camera.near = 1;
-sun.shadow.camera.far = 600;
-sun.shadow.bias = -0.0005;
-scene.add(sun);
+        const loginScreen = document.getElementById('loginScreen'), mainMenu = document.getElementById('mainMenu'), authMessage = document.getElementById('authMessage');
 
-function applySettings() {
-  camera.far = settings.drawDistance * 2;
-  camera.updateProjectionMatrix();
-  if (settings.fog) {
-    scene.fog = new THREE.Fog(0x9ac6e0, settings.drawDistance * 0.4, settings.drawDistance);
-  } else {
-    scene.fog = null;
-  }
-  renderer.shadowMap.enabled = settings.shadows;
-  sun.castShadow = settings.shadows;
-  if (settings.harshSun) {
-    ambientLight.intensity = 0.35;
-    sun.intensity = 1.6;
-    sun.color.setHex(0xfff2d0);
-  } else {
-    ambientLight.intensity = 0.7;
-    sun.intensity = 0.9;
-    sun.color.setHex(0xffffff);
-  }
-  const res = settings.renderRes / 100;
-  const pr = Math.min(devicePixelRatio, 2) * res;
-  renderer.setPixelRatio(pr);
-  renderer.setSize(innerWidth, innerHeight);
-  scene.traverse(o => {
-    if (o.isMesh && o !== ground && o !== water) {
-      o.castShadow = settings.shadows;
-      o.receiveShadow = settings.shadows;
-    }
-    if (o === ground) o.receiveShadow = settings.shadows;
-  });
-}
+        document.getElementById('registerBtn').addEventListener('click', () => {
+            const nick = document.getElementById('nickInput').value.trim(), pass = document.getElementById('passInput').value;
+            if (!nick || !pass) { authMessage.innerText = "Заполни все поля!"; return; }
+            const db = getUsersDB();
+            if (db[nick]) { authMessage.innerText = "Этот ник уже занят!"; return; }
+            db[nick] = { password: pass, cc: 0, skins: ['default'], equipped: 'default' }; saveUsersDB(db);
+            authMessage.style.color = "#00ffcc"; authMessage.innerText = "Аккаунт создан! Нажми ВОЙТИ.";
+        });
 
-const qualityPresets = {
-  low:    { drawDistance: 80,  fog: true,  shadows: false, harshSun: false, renderRes: 60 },
-  medium: { drawDistance: 150, fog: true,  shadows: false, harshSun: true,  renderRes: 100 },
-  high:   { drawDistance: 250, fog: true,  shadows: true,  harshSun: true,  renderRes: 100 },
-  ultra:  { drawDistance: 400, fog: true,  shadows: true,  harshSun: true,  renderRes: 100 }
-};
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            const nick = document.getElementById('nickInput').value.trim(), pass = document.getElementById('passInput').value;
+            const db = getUsersDB();
+            if (db[nick] && db[nick].password === pass) {
+                localStorage.setItem('currentFinikID', nick); loadUserData(nick);
+                authMessage.innerText = ""; document.getElementById('userDisplay').innerText = nick;
+                loginScreen.classList.add('hidden'); mainMenu.classList.remove('hidden');
+            } else { authMessage.style.color = "#ff4500"; authMessage.innerText = "Неверный ник или пароль!"; }
+        });
 
-function applyQuality(q) {
-  const p = qualityPresets[q];
-  settings.quality = q;
-  settings.drawDistance = p.drawDistance;
-  settings.fog = p.fog;
-  settings.shadows = p.shadows;
-  settings.harshSun = p.harshSun;
-  settings.renderRes = p.renderRes;
-  applySettings();
-  syncSettingsUI();
-}
-
-function syncSettingsUI() {
-  document.getElementById('qualityVal').textContent =
-    settings.quality === 'low' ? 'НИЗКАЯ' :
-    settings.quality === 'medium' ? 'СРЕДНЯЯ' :
-    settings.quality === 'high' ? 'ВЫСОКАЯ' : 'УЛЬТРА';
-  document.querySelectorAll('#qualityOpts .optBtn').forEach(b => {
-    b.classList.toggle('active', b.dataset.q === settings.quality);
-  });
-  document.getElementById('distRange').value = settings.drawDistance;
-  document.getElementById('distVal').textContent = settings.drawDistance;
-  document.getElementById('fogVal').textContent = settings.fog ? 'ВКЛ' : 'ВЫКЛ';
-  document.querySelectorAll('#fogOpts .optBtn').forEach(b => {
-    b.classList.toggle('active', (b.dataset.f === 'on') === settings.fog);
-  });
-  document.getElementById('shadowVal').textContent = settings.shadows ? 'ВКЛ' : 'ВЫКЛ';
-  document.querySelectorAll('#shadowOpts .optBtn').forEach(b => {
-    b.classList.toggle('active', (b.dataset.s === 'on') === settings.shadows);
-  });
-  document.getElementById('harshVal').textContent = settings.harshSun ? 'ВКЛ' : 'ВЫКЛ';
-  document.querySelectorAll('#harshOpts .optBtn').forEach(b => {
-    b.classList.toggle('active', (b.dataset.h === 'on') === settings.harshSun);
-  });
-  document.getElementById('resRange').value = settings.renderRes;
-  document.getElementById('resVal').textContent = settings.renderRes + '%';
-}
-
-document.querySelectorAll('#qualityOpts .optBtn').forEach(b => {
-  const fn = e => { e.preventDefault(); e.stopPropagation(); applyQuality(b.dataset.q); };
-  b.addEventListener('click', fn);
-  b.addEventListener('touchstart', fn, {passive:false});
-});
-document.getElementById('distRange').addEventListener('input', e => {
-  settings.drawDistance = parseInt(e.target.value);
-  applySettings(); syncSettingsUI();
-});
-document.querySelectorAll('#fogOpts .optBtn').forEach(b => {
-  const fn = e => { e.preventDefault(); e.stopPropagation(); settings.fog = (b.dataset.f === 'on'); applySettings(); syncSettingsUI(); };
-  b.addEventListener('click', fn);
-  b.addEventListener('touchstart', fn, {passive:false});
-});
-document.querySelectorAll('#shadowOpts .optBtn').forEach(b => {
-  const fn = e => { e.preventDefault(); e.stopPropagation(); settings.shadows = (b.dataset.s === 'on'); applySettings(); syncSettingsUI(); };
-  b.addEventListener('click', fn);
-  b.addEventListener('touchstart', fn, {passive:false});
-});
-document.querySelectorAll('#harshOpts .optBtn').forEach(b => {
-  const fn = e => { e.preventDefault(); e.stopPropagation(); settings.harshSun = (b.dataset.h === 'on'); applySettings(); syncSettingsUI(); };
-  b.addEventListener('click', fn);
-  b.addEventListener('touchstart', fn, {passive:false});
-});
-document.getElementById('resRange').addEventListener('input', e => {
-  settings.renderRes = parseInt(e.target.value);
-  applySettings(); syncSettingsUI();
-});
-
-// === МИР 500x500 ===
-const SIZE = 500, SEG = 350;
-const GS_X = -110, GS_Z = 140;
-const BEACH_Z = 215;
-const WATER_LEVEL = -0.5;
-
-function terrainH(x, z) {
-  const k = 0.4;
-  let h = 0;
-  h += Math.sin(x * 0.14 * k) * Math.cos(z * 0.14 * k) * 1.2;
-  h += Math.sin(x * 0.32 * k + 1.5) * Math.cos(z * 0.32 * k) * 0.55;
-  h += Math.sin(x * 0.07 * k + 3) * Math.cos(z * 0.07 * k + 2) * 1.9;
-  const spike = Math.sin(x * 0.11 * k + 1) * Math.cos(z * 0.11 * k + 4);
-  if (spike > 0.55) h += (spike - 0.55) * 22;
-  h += Math.sin(x * 0.65 * k) * Math.cos(z * 0.65 * k) * 0.15;
-
-  if (z > BEACH_Z) {
-    const t = Math.min((z - BEACH_Z) / 30, 1);
-    h = h * (1 - t) + (-0.9) * t;
-  }
-  const dGS = Math.hypot(x - GS_X, z - GS_Z);
-  if (dGS < 35) {
-    const t = 1 - dGS / 35;
-    h = h * (1 - t);
-  }
-  return h;
-}
-
-const geo = new THREE.PlaneGeometry(SIZE, SIZE, SEG, SEG);
-geo.rotateX(-Math.PI/2);
-const pos = geo.attributes.position;
-const cols = [];
-const c = new THREE.Color();
-for (let i = 0; i < pos.count; i++) {
-  const x = pos.getX(i), z = pos.getZ(i);
-  const h = terrainH(x, z);
-  pos.setY(i, h);
-  if (h < WATER_LEVEL - 0.05) c.setHex(0xb9a678);
-  else if (h < WATER_LEVEL + 0.15) c.setHex(0xd9c9a0);
-  else if (h < 0.2) c.setHex(0x6ba84a);
-  else if (h < 1.4) c.setHex(0x4a7c2f);
-  else if (h < 2.8) c.setHex(0x3a6120);
-  else if (h < 4.3) c.setHex(0x7a7a72);
-  else if (h < 5.8) c.setHex(0x9a9a92);
-  else c.setHex(0xf0f0f5);
-  cols.push(c.r, c.g, c.b);
-}
-geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
-geo.computeVertexNormals();
-
-const ground = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
-  vertexColors: true, flatShading: true, roughness: 0.95
-}));
-scene.add(ground);
-
-const waterGeo = new THREE.PlaneGeometry(SIZE * 2, SIZE * 2);
-waterGeo.rotateX(-Math.PI/2);
-const water = new THREE.Mesh(waterGeo, new THREE.MeshStandardMaterial({
-  color: 0x3a8ac0, transparent: true, opacity: 0.7, roughness: 0.15
-}));
-water.position.y = WATER_LEVEL;
-scene.add(water);
-
-const player = {
-  pos: new THREE.Vector3(0, 0, 205),
-  velY: 0,
-  onGround: true,
-  curEye: 1.6,
-  crouch: false
-};
-player.pos.y = terrainH(0, 205);
-
-const handGroup = new THREE.Group();
-handGroup.position.set(0.4, -0.45, -0.7);
-camera.add(handGroup);
-
-let handMesh = null;
-const BASE_ROT = { x: 0.1, y: -0.3, z: 0.15 };
-
-function buildHand(type) {
-  if (handMesh) {
-    handGroup.remove(handMesh);
-    handMesh.traverse(o => {
-      if (o.geometry) o.geometry.dispose();
-      if (o.material) o.material.dispose();
-    });
-  }
-  // ironAxe смотрим как axe, ironPickaxe как pickaxe
-  const t = (type === 'ironAxe') ? 'axe' : (type === 'ironPickaxe') ? 'pickaxe' : type;
-  if (t === 'axe') {
-    const g = new THREE.Group();
-    const stick = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.55, 0.06),
-      new THREE.MeshStandardMaterial({color:0x8B4513}));
-    g.add(stick);
-    const isIron = (type === 'ironAxe');
-    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.18, 0.22),
-      new THREE.MeshStandardMaterial({color: isIron ? 0xd0d0d0 : 0x8a8a8a, metalness: isIron ? 0.6 : 0.2}));
-    blade.position.set(0, 0.26, -0.08); g.add(blade);
-    const edge = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.2, 0.04),
-      new THREE.MeshStandardMaterial({color: isIron ? 0xf0f0f0 : 0xc8c8c8}));
-    edge.position.set(0, 0.26, -0.2); g.add(edge);
-    const back = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.14, 0.08),
-      new THREE.MeshStandardMaterial({color:0x707070}));
-    back.position.set(0, 0.26, 0.06); g.add(back);
-    g.rotation.set(BASE_ROT.x, BASE_ROT.y, BASE_ROT.z);
-    handMesh = g;
-  } else if (t === 'pickaxe') {
-    const g = new THREE.Group();
-    const stick = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.6, 0.06),
-      new THREE.MeshStandardMaterial({
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('currentFinikID'); currentUser = null;
+            mainMenu.classList.add('hidden'); loginScreen.classList.remove('hidden'); documen
