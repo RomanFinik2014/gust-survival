@@ -1,6 +1,6 @@
 {
   "appId": "com.finikgustsurvival.app",
-  "appName": "Gust Survival",
+  "appName": "Counter Zustex",
   "webDir": "www",
   "bundledWebRuntime": false,
   "android": {
