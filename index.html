@@ -3,14 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Counter Zustex</title>
+    <title>Counter Zustex v0.1.0</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #111; font-family: 'Arial', sans-serif; user-select: none; touch-action: none; }
         canvas { display: block; }
         
+        #toast { position: absolute; top: 20%; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.9); color: #00ffcc; padding: 15px 30px; border-radius: 10px; border: 2px solid #00ffcc; font-weight: bold; font-size: 18px; z-index: 1000; display: none; text-align: center; pointer-events: none; box-shadow: 0 0 20px rgba(0, 255, 204, 0.5); }
+
         .menu-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, #2a2a2a 0%, #111 100%); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white; overflow-y: auto; padding: 20px 0; box-sizing: border-box; }
-        .menu-screen.hidden { display: none; }
+        .menu-screen.hidden { display: none !important; }
+
+        #mainMenu { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(10, 15, 20, 0.85), rgba(10, 15, 20, 0.95)), url('https://images.unsplash.com/photo-1542751371-adc38448a05e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover; display: flex; flex-direction: column; justify-content: space-between; align-items: stretch; z-index: 100; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: rgba(0,0,0,0.6); border-bottom: 2px solid #3b4147; width: 100%; box-sizing: border-box;}
+        .top-bar .logo { font-size: 24px; font-weight: 900; color: #fff; letter-spacing: 2px; text-shadow: 0 0 10px rgba(255,255,255,0.5); display: flex; align-items: baseline; gap: 15px;}
+        .top-bar .logo span { color: #ff8c00; }
+        .top-bar .version { font-size: 12px; color: #888; font-weight: normal; text-shadow: none; letter-spacing: 0; }
+        .top-bar .user-info { display: flex; align-items: center; gap: 20px; }
+        .user-info .balance { color: #00ffcc; font-weight: bold; font-size: 18px; }
+        .user-info .nickname { color: #fff; font-weight: bold; font-size: 16px; }
+        .btn-logout { background: #d9534f; color: white; border: none; padding: 8px 15px; border-radius: 3px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 12px;}
+        .btn-logout:active { background: #c9302c; }
+
+        .main-content { flex: 1; display: flex; padding: 20px 30px; position: relative; width: 100%; box-sizing: border-box; }
         
+        .news-panel { width: 350px; background: rgba(20, 24, 28, 0.9); border: 1px solid #3b4147; border-radius: 5px; display: flex; flex-direction: column; box-shadow: 0 5px 15px rgba(0,0,0,0.5); align-self: flex-start; }
+        .news-header { padding: 15px; border-bottom: 1px solid #3b4147; font-size: 18px; font-weight: bold; color: #ccc; text-transform: uppercase; letter-spacing: 1px; }
+        .news-item { padding: 15px; border-bottom: 1px solid #2a2e33; }
+        .news-item:last-child { border-bottom: none; }
+        .news-image { width: 100%; height: 120px; background: #1a1e22; margin-bottom: 10px; border-radius: 3px; display: flex; justify-content: center; align-items: center; overflow: hidden; position: relative;}
+        .news-title { font-size: 16px; font-weight: bold; margin-bottom: 5px; color: #ff8c00; }
+        .news-desc { font-size: 12px; color: #999; line-height: 1.4; }
+
+        .bottom-nav { display: flex; background: rgba(15, 18, 22, 0.95); border-top: 3px solid #ff8c00; height: 80px; width: 100%; }
+        .nav-btn { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; background: none; border: none; border-right: 1px solid #2a2e33; color: #888; font-size: 12px; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
+        .nav-btn:hover { background: rgba(255,255,255,0.05); color: #ccc; }
+        .nav-btn.active { background: rgba(255, 140, 0, 0.15); color: #ff8c00; border-bottom: 4px solid #ff8c00; }
+        .nav-btn .icon { font-size: 24px; margin-bottom: 5px; }
+
         h1 { font-size: 38px; margin: 0; color: #ffcc00; text-shadow: 0 0 20px #ffcc00; text-align: center; font-weight: 900; }
         h2 { font-size: 18px; color: #aaa; margin-bottom: 15px; text-transform: uppercase; }
         
@@ -23,12 +53,12 @@
         .menu-btn.buy { border-color: #00ffcc; background: linear-gradient(90deg, #004d40 0%, #00897b 100%); }
         .menu-btn.equip { border-color: #4CAF50; background: #2E7D32; font-size: 14px; width: 100%; padding: 10px;}
         .menu-btn.equipped { border-color: #888; background: #333; color: #888; }
-        .menu-btn.logout { border-color: #d9534f; background: #d9534f; font-size: 12px; padding: 5px 10px; width: auto; position: absolute; top: 15px; left: 15px; }
+        
+        .btn-public { border-color: #00ff00; background: linear-gradient(90deg, #1b5e20 0%, #2e7d32 100%); color: white; }
 
         .input-field { width: 80%; max-width: 300px; padding: 12px; margin: 5px 0; border-radius: 5px; border: 2px solid #555; background: #222; color: white; font-size: 16px; outline: none; text-align: center; }
         .input-field:focus { border-color: #4CAF50; }
         #authMessage, #mpMessage { color: #ff4500; font-weight: bold; margin: 10px 0; height: 20px; text-align: center; font-size: 14px;}
-        .user-info { position: absolute; top: 15px; right: 15px; color: #4CAF50; font-weight: bold; font-size: 16px; }
 
         .shop-container { width: 90%; max-width: 350px; display: flex; flex-direction: column; align-items: center; }
         .case-box { background: #222; border: 3px solid #ffcc00; border-radius: 10px; padding: 20px; width: 100%; text-align: center; margin-bottom: 20px; box-shadow: 0 0 15px rgba(255, 204, 0, 0.3); }
@@ -59,7 +89,11 @@
         #hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: none; }
         #hitMarker { position: absolute; top: 50%; left: 50%; width: 24px; height: 24px; border: 2px solid red; transform: translate(-50%, -50%) rotate(45deg); display: none; }
         
-        #topUI { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; justify-content: space-between; align-items: flex-start; font-size: 18px; font-weight: bold; text-shadow: 2px 2px 2px black; }
+        #fpsCounter { position: absolute; top: 100px; right: 15px; color: #00ff00; font-family: monospace; font-size: 16px; font-weight: bold; text-shadow: 1px 1px 2px black; display: none; z-index: 12;}
+        #exitGameBtn { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); background: #d9534f; color: white; border: 2px solid white; padding: 8px 15px; border-radius: 5px; font-weight: bold; font-size: 14px; pointer-events: auto; z-index: 12; display: none;}
+        #exitGameBtn:active { background: #c9302c; transform: translateX(-50%) scale(0.95); }
+
+        #topUI { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; align-items: flex-start; font-size: 18px; font-weight: bold; text-shadow: 2px 2px 2px black; z-index: 11; }
         #teamScore { display: flex; gap: 15px; background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 10px; border: 2px solid #555; }
         .score-blue { color: #00bfff; font-size: 20px; }
         .score-red { color: #ff4500; font-size: 20px; }
@@ -93,33 +127,29 @@
         
         #roomCodeDisplay { font-size: 32px; color: #00ffcc; letter-spacing: 5px; margin: 15px 0; font-weight: bold; text-shadow: 0 0 10px #00ffcc; display: none; }
 
-        /* ===== СПЕЦИАЛЬНЫЕ СТИЛИ ДЛЯ ГОРИЗОНТАЛЬНОГО РЕЖИМА ===== */
         @media (orientation: landscape) {
-            .menu-screen { padding: 10px 0; justify-content: flex-start; }
-            h1 { font-size: 30px; margin-top: 10px; }
-            h2 { font-size: 14px; margin-bottom: 10px; }
-            .menu-btn { padding: 10px; margin: 4px 0; font-size: 14px; width: 60%; max-width: 400px; }
-            
+            .menu-screen:not(#mainMenu) { padding: 10px 0; justify-content: flex-start; }
+            .menu-screen:not(#mainMenu) h1 { font-size: 30px; margin-top: 10px; }
+            .menu-screen:not(#mainMenu) h2 { font-size: 14px; margin-bottom: 10px; }
+            .menu-screen:not(#mainMenu) .menu-btn { padding: 10px; margin: 4px 0; font-size: 14px; width: 60%; max-width: 400px; }
             .cc-balance { font-size: 18px; margin-bottom: 10px; }
-            
-            /* Магазин: делаем в 2 колонки */
             .shop-container { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 15px; max-width: 700px; }
             .case-box { width: 45%; margin-bottom: 10px; padding: 15px; }
             .case-box h3 { font-size: 18px; }
             .inventory-grid { grid-template-columns: repeat(3, 1fr); max-width: 100%; width: 100%; }
-            
-            /* Настройки: делаем в 2 колонки */
             .setting-item { width: 45%; max-width: none; margin: 5px; display: inline-flex; }
             .setting-item label { font-size: 12px; }
-            
-            /* Экран входа */
             .input-field { width: 50%; max-width: 400px; padding: 8px; margin: 3px 0; }
+            .news-panel { width: 300px; }
+            .bottom-nav { height: 60px; }
+            .nav-btn .icon { font-size: 20px; }
         }
     </style>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
-    <!-- ЭКРАН ВХОДА FINIK ID -->
+    <div id="toast">Уведомление</div>
+
     <div id="loginScreen" class="menu-screen">
         <h1>FINIK ID</h1>
         <h2>Вход в систему</h2>
@@ -130,31 +160,49 @@
         <button id="registerBtn" class="menu-btn" style="border-color: #00ffcc; color: #00ffcc;">РЕГИСТРАЦИЯ</button>
     </div>
 
-    <!-- ГЛАВНОЕ МЕНЮ -->
     <div id="mainMenu" class="menu-screen hidden">
-        <button id="logoutBtn" class="menu-btn logout">ВЫЙТИ</button>
-        <div id="userDisplay" class="user-info">Игрок</div>
-        
-        <h1>COUNTER ZUSTEX</h1>
-        <div class="cc-balance">Баланс: <span id="menuCC">0</span> CC</div>
-        <button id="playMenuBtn" class="menu-btn">ОДИНОЧНАЯ ИГРА</button>
-        <button id="mpMenuBtn" class="menu-btn" style="border-color: #ff00ff; color: #ff00ff;">СЕТЕВАЯ ИГРА (1v1)</button>
-        <button id="shopMenuBtn" class="menu-btn" style="border-color: #00ffcc; color: #00ffcc;">КЕЙСЫ И СКИНЫ</button>
-        <button id="settingsBtnMain" class="menu-btn">НАСТРОЙКИ</button>
+        <div class="top-bar">
+            <div class="logo">COUNTER <span>ZUSTEX</span> <span class="version">v0.1.0</span></div>
+            <div class="user-info">
+                <div class="balance">Баланс: <span id="menuCC">0</span> CC</div>
+                <div class="nickname" id="userDisplay">Игрок</div>
+                <button id="logoutBtn" class="btn-logout">Выйти</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="news-panel">
+                <div class="news-header">Новости и Обновления</div>
+                <div class="news-item">
+                    <div class="news-image"><div style="color: #00ff00; font-weight: bold; font-size: 20px;">PUBLIC SERVERS</div></div>
+                    <div class="news-title">Обновление 0.1.0!</div>
+                    <div class="news-desc">Добавлена быстрая игра и никнеймы над головами игроков. Теперь вы знаете, с кем сражаетесь!</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button id="playMenuBtn" class="nav-btn active"><span class="icon">🎮</span>ИГРАТЬ</button>
+            <button id="mpMenuBtn" class="nav-btn"><span class="icon">🌐</span>СЕТЬ</button>
+            <button id="shopMenuBtn" class="nav-btn"><span class="icon">📦</span>МАГАЗИН</button>
+            <button id="settingsBtnMain" class="nav-btn"><span class="icon">⚙️</span>НАСТРОЙКИ</button>
+        </div>
     </div>
 
-    <!-- СЕТЕВАЯ ИГРА -->
     <div id="mpMenu" class="menu-screen hidden">
         <h1>СЕТЕВАЯ ИГРА</h1>
         <div id="mpMessage"></div>
-        <button id="hostBtn" class="menu-btn">СОЗДАТЬ ИГРУ</button>
+        
+        <button id="btnQuickMatch" class="menu-btn btn-public">⚡ БЫСТРАЯ ИГРА (PUBLIC)</button>
+        <p style="color: #888; font-size: 12px; margin: 5px 0 20px 0;">Найдет случайного игрока онлайн</p>
+        
+        <button id="hostBtn" class="menu-btn">СОЗДАТЬ ИГРУ (С ДРУГОМ)</button>
         <div id="roomCodeDisplay"></div>
         <input type="text" id="joinCodeInput" class="input-field" placeholder="Введи код друга" autocomplete="off">
         <button id="joinBtn" class="menu-btn">ПОДКЛЮЧИТЬСЯ</button>
         <button id="btnBackFromMp" class="menu-btn back">НАЗАД</button>
     </div>
 
-    <!-- МАГАЗИН -->
     <div id="shopMenu" class="menu-screen hidden">
         <h1>МАГАЗИН</h1>
         <div class="cc-balance">Баланс: <span id="shopCC">0</span> CC</div>
@@ -172,13 +220,11 @@
         <button id="btnBackFromShop" class="menu-btn back">НАЗАД В МЕНЮ</button>
     </div>
 
-    <!-- АНИМАЦИЯ КЕЙСА -->
     <div id="revealScreen">
         <div id="revealBox">ВЫПАЛО!<span id="revealName">Camo</span></div>
         <button id="closeRevealBtn" class="menu-btn equip" style="margin-top: 30px; width: 200px;">ЗАБРАТЬ</button>
     </div>
 
-    <!-- РЕЖИМЫ -->
     <div id="modeMenu" class="menu-screen hidden">
         <h1>ВЫБЕРИ РЕЖИМ</h1>
         <button id="btnRange" class="menu-btn">СТРЕЛЬБИЩЕ</button>
@@ -186,7 +232,6 @@
         <button id="btnBackToMain" class="menu-btn back">НАЗАД</button>
     </div>
 
-    <!-- НАСТРОЙКИ -->
     <div id="settingsMenu" class="menu-screen hidden">
         <h1>НАСТРОЙКИ</h1>
         <div class="setting-item">
@@ -200,6 +245,13 @@
         <div class="setting-item">
             <label>Размер кнопок <span id="sizeVal">100%</span></label>
             <input type="range" id="sizeSlider" min="0.5" max="1.5" step="0.1" value="1.0">
+        </div>
+        <div class="setting-item">
+            <label>Показывать FPS</label>
+            <div class="toggle-group">
+                <div class="toggle-btn" id="btnFpsOff">ВЫКЛ</div>
+                <div class="toggle-btn" id="btnFpsOn">ВКЛ</div>
+            </div>
         </div>
         <div class="setting-item" style="border-color: #00ffcc;">
             <label style="color: #00ffcc; font-weight: bold;">ПРИЦЕЛ</label>
@@ -223,7 +275,6 @@
         <button id="btnBackFromSettings" class="menu-btn back">НАЗАД</button>
     </div>
 
-    <!-- КОНЕЦ ИГРЫ -->
     <div id="gameOverScreen" class="menu-screen hidden">
         <h1 id="gameOverTitle">КОНЕЦ МАТЧА</h1>
         <h2 id="gameOverSub">Счет: 0 - 0</h2>
@@ -232,10 +283,13 @@
         <button id="btnBackToMenu" class="menu-btn back">В МЕНЮ</button>
     </div>
 
-    <!-- HUD -->
     <div id="hud">
         <div id="saveBtn">СОХРАНИТЬ</div>
         <div id="damageOverlay"></div>
+        
+        <button id="exitGameBtn">В МЕНЮ</button>
+        <div id="fpsCounter">FPS: 0</div>
+
         <div id="topUI">
             <div id="teamScore">
                 <span class="score-blue" id="scoreBlue">0</span>
@@ -266,32 +320,70 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // ==========================================
-        // БЛОКИРОВКА ПОВОРОТА ЭКРАНА (Горизонталь)
-        // ==========================================
         function lockLandscape() {
             if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('landscape').catch(err => {
-                    console.log("Ошибка блокировки ориентации: ", err);
-                });
+                screen.orientation.lock('landscape').catch(err => { console.log("Ошибка ориентации"); });
             }
         }
-        document.addEventListener('pointerdown', lockLandscape, { once: true }); // Срабатывает при первом клике
+        document.addEventListener('pointerdown', lockLandscape, { once: true });
 
-        // ==========================================
-        // 1. БАЗА ДАННЫХ FINIK ID
-        // ==========================================
+        let memoryDB = {}; 
+        let currentUser = null;
+        let opponentNickname = "Player"; // Ник соперника по умолчанию
+
+        function getUsersDB() { 
+            try { return JSON.parse(localStorage.getItem('finikID_DB')) || memoryDB; } 
+            catch(e) { return memoryDB; } 
+        }
+        function saveUsersDB(db) { 
+            memoryDB = db;
+            try { localStorage.setItem('finikID_DB', JSON.stringify(db)); } 
+            catch(e) { console.log("localStorage заблокирован"); } 
+        }
+        
+        try { currentUser = localStorage.getItem('currentFinikID'); } catch(e) { currentUser = null; }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2500);
+        }
+
+        // === ФУНКЦИЯ СОЗДАНИЯ НИКНЕЙМА НАД ГОЛОВОЙ ===
+        function createNameTag(text, isBot = false) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 256;
+            canvas.height = 64;
+            
+            // Фон
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Текст
+            ctx.font = 'bold 28px Arial';
+            ctx.fillStyle = isBot ? '#ff4500' : '#00ffcc'; // Боты - красные, люди - зеленые
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const material = new THREE.SpriteMaterial({ map: texture, depthTest: false }); // depthTest false, чтобы видеть сквозь стены
+            const sprite = new THREE.Sprite(material);
+            sprite.scale.set(2, 0.5, 1); 
+            sprite.position.y = 2.2; // Над головой
+            return sprite;
+        }
+
         const skinsDB = {
             'default': { name: 'Стандарт', wood: 0x8B4513, metal: 0x333333, rarity: 'Обычный', color: '#fff' },
             'camo': { name: 'Camouflage', wood: 0x556B2F, metal: 0x2F4F4F, rarity: 'Редкий', color: '#00ffcc' },
             'hinji': { name: 'Hinji', wood: 0xFF69B4, metal: 0x8B008B, rarity: 'Эпический', color: '#ff00ff' }
         };
 
-        let currentUser = localStorage.getItem('currentFinikID') || null;
         let ccBalance = 0, ownedSkins = ['default'], equippedSkin = 'default';
 
-        function getUsersDB() { return JSON.parse(localStorage.getItem('finikID_DB')) || {}; }
-        function saveUsersDB(db) { localStorage.setItem('finikID_DB', JSON.stringify(db)); }
         function loadUserData(nick) {
             const db = getUsersDB();
             if (db[nick]) { currentUser = nick; ccBalance = db[nick].cc || 0; ownedSkins = db[nick].skins || ['default']; equippedSkin = db[nick].equipped || 'default'; updateCCUI(); }
@@ -316,44 +408,67 @@
             const nick = document.getElementById('nickInput').value.trim(), pass = document.getElementById('passInput').value;
             const db = getUsersDB();
             if (db[nick] && db[nick].password === pass) {
-                localStorage.setItem('currentFinikID', nick); loadUserData(nick);
+                currentUser = nick; 
+                try { localStorage.setItem('currentFinikID', nick); } catch(e) {}
+                loadUserData(nick);
                 authMessage.innerText = ""; document.getElementById('userDisplay').innerText = nick;
                 loginScreen.classList.add('hidden'); mainMenu.classList.remove('hidden');
             } else { authMessage.style.color = "#ff4500"; authMessage.innerText = "Неверный ник или пароль!"; }
         });
 
         document.getElementById('logoutBtn').addEventListener('click', () => {
-            localStorage.removeItem('currentFinikID'); currentUser = null;
+            currentUser = null;
+            try { localStorage.removeItem('currentFinikID'); } catch(e) {}
             mainMenu.classList.add('hidden'); loginScreen.classList.remove('hidden'); document.getElementById('passInput').value = '';
         });
 
         if (currentUser) { loadUserData(currentUser); document.getElementById('userDisplay').innerText = currentUser; loginScreen.classList.add('hidden'); mainMenu.classList.remove('hidden'); }
         function updateCCUI() { document.getElementById('menuCC').innerText = ccBalance; document.getElementById('shopCC').innerText = ccBalance; }
 
-        // ==========================================
-        // 2. МЕНЮ И НАВИГАЦИЯ
-        // ==========================================
+        function hideAllMenus() {
+            document.querySelectorAll('.menu-screen').forEach(el => el.classList.add('hidden'));
+        }
+        function setActiveNav(btnId) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            if (btnId && document.getElementById(btnId)) {
+                document.getElementById(btnId).classList.add('active');
+            }
+        }
+
         const modeMenu = document.getElementById('modeMenu'), settingsMenu = document.getElementById('settingsMenu'), shopMenu = document.getElementById('shopMenu'), gameOverScreen = document.getElementById('gameOverScreen'), hud = document.getElementById('hud'), mpMenu = document.getElementById('mpMenu');
 
-        document.getElementById('playMenuBtn').onclick = () => { mainMenu.classList.add('hidden'); modeMenu.classList.remove('hidden'); };
-        document.getElementById('mpMenuBtn').onclick = () => { mainMenu.classList.add('hidden'); mpMenu.classList.remove('hidden'); };
-        document.getElementById('settingsBtnMain').onclick = () => { mainMenu.classList.add('hidden'); settingsMenu.classList.remove('hidden'); };
-        document.getElementById('shopMenuBtn').onclick = () => { mainMenu.classList.add('hidden'); shopMenu.classList.remove('hidden'); renderInventory(); };
-        document.getElementById('btnBackToMain').onclick = () => { modeMenu.classList.add('hidden'); mainMenu.classList.remove('hidden'); };
-        document.getElementById('btnBackFromSettings').onclick = () => { settingsMenu.classList.add('hidden'); mainMenu.classList.remove('hidden'); };
-        document.getElementById('btnBackFromShop').onclick = () => { shopMenu.classList.add('hidden'); mainMenu.classList.remove('hidden'); };
-        document.getElementById('btnBackToMenu').onclick = () => { gameOverScreen.classList.add('hidden'); mainMenu.classList.remove('hidden'); hud.style.display = 'none'; updateCCUI(); };
+        document.getElementById('playMenuBtn').onclick = () => { hideAllMenus(); modeMenu.classList.remove('hidden'); setActiveNav('playMenuBtn'); };
+        document.getElementById('mpMenuBtn').onclick = () => { hideAllMenus(); mpMenu.classList.remove('hidden'); setActiveNav('mpMenuBtn'); };
+        document.getElementById('settingsBtnMain').onclick = () => { hideAllMenus(); settingsMenu.classList.remove('hidden'); setActiveNav('settingsBtnMain'); };
+        document.getElementById('shopMenuBtn').onclick = () => { hideAllMenus(); shopMenu.classList.remove('hidden'); renderInventory(); setActiveNav('shopMenuBtn'); };
+        
+        document.getElementById('btnBackToMain').onclick = () => { hideAllMenus(); mainMenu.classList.remove('hidden'); setActiveNav('playMenuBtn'); };
+        document.getElementById('btnBackFromSettings').onclick = () => { hideAllMenus(); mainMenu.classList.remove('hidden'); setActiveNav('settingsBtnMain'); };
+        document.getElementById('btnBackFromShop').onclick = () => { hideAllMenus(); mainMenu.classList.remove('hidden'); setActiveNav('shopMenuBtn'); };
+        document.getElementById('btnBackFromMp').onclick = () => { 
+            hideAllMenus(); mainMenu.classList.remove('hidden'); setActiveNav('mpMenuBtn');
+            if(conn) conn.close(); if(peer) peer.destroy();
+        };
+        
+        document.getElementById('btnBackToMenu').onclick = () => { hideAllMenus(); mainMenu.classList.remove('hidden'); setActiveNav('playMenuBtn'); hud.style.display = 'none'; updateCCUI(); };
         document.getElementById('btnRange').onclick = () => startGame('range');
         document.getElementById('btnTDM').onclick = () => startGame('tdm');
         document.getElementById('btnRestart').onclick = () => startGame(currentMode);
-        document.getElementById('btnBackFromMp').onclick = () => { 
-            mpMenu.classList.add('hidden'); mainMenu.classList.remove('hidden'); 
-            if(conn) conn.close(); if(peer) peer.destroy();
+
+        document.getElementById('exitGameBtn').onclick = () => {
+            gameState = 'menu';
+            hud.style.display = 'none';
+            hideAllMenus(); 
+            mainMenu.classList.remove('hidden');
+            setActiveNav('playMenuBtn');
+            clearBots();
+            if (matchTimerInterval) clearInterval(matchTimerInterval);
+            if (conn) { conn.close(); peer.destroy(); }
+            document.getElementById('crosshair-container').style.display = 'none';
+            document.getElementById('saveBtn').style.display = 'none';
+            document.getElementById('exitGameBtn').style.display = 'none';
         };
 
-        // ==========================================
-        // 3. КЕЙС И ИНВЕНТАРЬ
-        // ==========================================
         function renderInventory() {
             const grid = document.getElementById('inventoryGrid'); grid.innerHTML = ''; 
             for (let key in skinsDB) {
@@ -372,7 +487,7 @@
         window.equipSkin = function(skinId) { equippedSkin = skinId; saveUserData(); renderInventory(); };
 
         document.getElementById('openCaseBtn').onclick = () => {
-            if (ccBalance < 200) { alert("Недостаточно CC!"); return; }
+            if (ccBalance < 200) { showToast("Недостаточно CC!"); return; }
             ccBalance -= 200; saveUserData(); updateCCUI();
             const roll = Math.random(); let wonSkin = roll < 0.6 ? 'camo' : 'hinji';
             if (!ownedSkins.includes(wonSkin)) { ownedSkins.push(wonSkin); saveUserData(); }
@@ -382,13 +497,11 @@
         };
         document.getElementById('closeRevealBtn').onclick = () => { document.getElementById('revealScreen').style.display = 'none'; renderInventory(); };
 
-        // ==========================================
-        // 4. НАСТРОЙКИ ПРИЦЕЛА
-        // ==========================================
         let chSize = parseInt(localStorage.getItem('chSize')) || 10;
         let chThickness = parseInt(localStorage.getItem('chThickness')) || 2;
         let chStyle = localStorage.getItem('chStyle') || 'cross';
         let chType = localStorage.getItem('chType') || 'static';
+        let showFPS = localStorage.getItem('showFPS') === 'true';
         
         let chBaseGap = 4; let currentGap = chBaseGap; let targetGap = chBaseGap;
         const chTop = document.getElementById('ch-top'), chBottom = document.getElementById('ch-bottom'), chLeft = document.getElementById('ch-left'), chRight = document.getElementById('ch-right'), chDot = document.getElementById('ch-dot');
@@ -401,9 +514,12 @@
             document.getElementById('btnStyleDot').classList.toggle('active', chStyle === 'dot');
             document.getElementById('btnTypeStatic').classList.toggle('active', chType === 'static');
             document.getElementById('btnTypeDynamic').classList.toggle('active', chType === 'dynamic');
+            
+            document.getElementById('btnFpsOn').classList.toggle('active', showFPS);
+            document.getElementById('btnFpsOff').classList.toggle('active', !showFPS);
+            document.getElementById('fpsCounter').style.display = showFPS ? 'block' : 'none';
 
             [chTop, chBottom, chLeft, chRight, chDot].forEach(el => el.style.display = 'none');
-
             if (chStyle === 'dot') { chDot.style.display = 'block'; } 
             else if (chStyle === 't') { chBottom.style.display = 'block'; chLeft.style.display = 'block'; chRight.style.display = 'block'; } 
             else { chTop.style.display = 'block'; chBottom.style.display = 'block'; chLeft.style.display = 'block'; chRight.style.display = 'block'; }
@@ -415,9 +531,7 @@
             chBottom.style.width = chThickness + 'px'; chBottom.style.height = chSize + 'px'; chBottom.style.left = -(chThickness / 2) + 'px'; chBottom.style.top = gap + 'px';
             chLeft.style.width = chSize + 'px'; chLeft.style.height = chThickness + 'px'; chLeft.style.top = -(chThickness / 2) + 'px'; chLeft.style.left = -(gap + chSize) + 'px';
             chRight.style.width = chSize + 'px'; chRight.style.height = chThickness + 'px'; chRight.style.top = -(chThickness / 2) + 'px'; chRight.style.left = gap + 'px';
-
-            const dotSize = Math.max(2, chThickness + 2); 
-            chDot.style.width = dotSize + 'px'; chDot.style.height = dotSize + 'px';
+            const dotSize = Math.max(2, chThickness + 2); chDot.style.width = dotSize + 'px'; chDot.style.height = dotSize + 'px';
         }
 
         document.getElementById('chSizeSlider').addEventListener('input', (e) => { chSize = parseInt(e.target.value); localStorage.setItem('chSize', chSize); applyCrosshairUI(); updateCrosshairPositions(); });
@@ -427,12 +541,12 @@
         document.getElementById('btnStyleDot').addEventListener('click', () => { chStyle = 'dot'; localStorage.setItem('chStyle', chStyle); applyCrosshairUI(); updateCrosshairPositions(); });
         document.getElementById('btnTypeStatic').addEventListener('click', () => { chType = 'static'; localStorage.setItem('chType', chType); applyCrosshairUI(); });
         document.getElementById('btnTypeDynamic').addEventListener('click', () => { chType = 'dynamic'; localStorage.setItem('chType', chType); applyCrosshairUI(); });
+        
+        document.getElementById('btnFpsOn').addEventListener('click', () => { showFPS = true; localStorage.setItem('showFPS', 'true'); applyCrosshairUI(); });
+        document.getElementById('btnFpsOff').addEventListener('click', () => { showFPS = false; localStorage.setItem('showFPS', 'false'); applyCrosshairUI(); });
 
         applyCrosshairUI(); updateCrosshairPositions();
 
-        // ==========================================
-        // 5. 3D СЦЕНА И ИГРА
-        // ==========================================
         function createAK47(skinId) {
             const skin = skinsDB[skinId] || skinsDB['default'];
             const g = new THREE.Group(); 
@@ -457,10 +571,29 @@
 
         const scene = new THREE.Scene(); scene.background = new THREE.Color(0x87CEEB); scene.fog = new THREE.Fog(0x87CEEB, 20, 60);
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 1.7, 10); camera.rotation.order = 'YXZ'; scene.add(camera);
+        camera.position.set(0, 1.7, 15); camera.rotation.order = 'YXZ'; scene.add(camera);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); document.body.appendChild(renderer.domElement);
         scene.add(new THREE.AmbientLight(0xffffff, 0.8)); const dirLight = new THREE.DirectionalLight(0xffffff, 0.6); dirLight.position.set(10, 20, 10); scene.add(dirLight);
+
+        const legsGroup = new THREE.Group();
+        const legMat = new THREE.MeshLambertMaterial({ color: 0x1a1a1a }); 
+        const bootMat = new THREE.MeshLambertMaterial({ color: 0x050505 }); 
+
+        const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.8, 0.2), legMat);
+        leftLeg.position.set(-0.25, 0.4, 0); 
+        const leftBoot = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.2, 0.25), bootMat);
+        leftBoot.position.set(0, -0.4, -0.02);
+        leftLeg.add(leftBoot);
+
+        const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.8, 0.2), legMat);
+        rightLeg.position.set(0.25, 0.4, 0); 
+        const rightBoot = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.2, 0.25), bootMat);
+        rightBoot.position.set(0, -0.4, -0.02);
+        rightLeg.add(rightBoot);
+
+        legsGroup.add(leftLeg, rightLeg);
+        scene.add(legsGroup); 
 
         let playerGun;
         function updatePlayerGun() {
@@ -482,14 +615,162 @@
         createBox(-8, 1.5, 5, 4, 3, 4, 0x8B4513); createBox(8, 1.5, 5, 4, 3, 4, 0x8B4513);
 
         let bots = [];
-        const botBlueMat = new THREE.MeshLambertMaterial({ color: 0x00bfff }); const botRedMat = new THREE.MeshLambertMaterial({ color: 0xff4500 }); const headMat = new THREE.MeshLambertMaterial({ color: 0xffcc00 });    
+        const botNames = ["Bot_Alpha", "Bot_Bravo", "Bot_Charlie", "Bot_Delta", "Bot_Echo"];
+
         function clearBots() { bots.forEach(b => scene.remove(b)); bots = []; }
 
-        // МУЛЬТИПЛЕЕР
+        function createMinecraftCharacter(isCT, isBot = false, botName = "") {
+            const group = new THREE.Group();
+            
+            const bodyColor = isCT ? 0x2b3a67 : 0x6b4423; 
+            const legColor = isCT ? 0x1a1a2e : 0x3d2612;
+            const headColor = 0xffcc99; 
+
+            const matBody = new THREE.MeshLambertMaterial({ color: bodyColor });
+            const matLegs = new THREE.MeshLambertMaterial({ color: legColor });
+            const matHead = new THREE.MeshLambertMaterial({ color: headColor });
+
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.3), matBody); 
+            body.position.y = 1.0; group.add(body);
+
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), matHead); 
+            head.position.y = 1.65; head.userData.isHead = true; group.add(head);
+
+            if (isCT) {
+                const helmet = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.2, 0.5), new THREE.MeshLambertMaterial({ color: 0x111111 })); 
+                helmet.position.set(0, 1.8, 0); group.add(helmet);
+            } else {
+                const mask = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.25, 0.1), new THREE.MeshLambertMaterial({ color: 0x222222 })); 
+                mask.position.set(0, 1.6, 0.2); group.add(mask);
+            }
+
+            const botLeftArm = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.7, 0.15), matBody); 
+            botLeftArm.position.set(-0.35, 1.0, 0.1); botLeftArm.rotation.x = -0.6; group.add(botLeftArm);
+
+            const botRightArm = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.7, 0.15), matBody); 
+            botRightArm.position.set(0.35, 1.0, 0.1); botRightArm.rotation.x = -0.6; group.add(botRightArm);
+
+            const botLeftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.8, 0.25), matLegs); 
+            botLeftLeg.position.set(-0.15, 0.4, 0); group.add(botLeftLeg);
+
+            const botRightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.8, 0.25), matLegs); 
+            botRightLeg.position.set(0.15, 0.4, 0); group.add(botRightLeg);
+
+            const botGun = createAK47('default');
+            botGun.position.set(0.2, 1.1, 0.3); 
+            botGun.rotation.y = Math.PI; 
+            group.add(botGun);
+
+            // Добавляем Никнейм
+            if (isBot && botName) {
+                const tag = createNameTag(botName, true);
+                group.add(tag);
+            }
+
+            return group;
+        }
+
+        function spawnBot(team) {
+            if (gameState !== 'playing') return;
+            const isCT = (team === 'blue');
+            
+            // Выбираем случайное имя для бота
+            const randomName = botNames[Math.floor(Math.random() * botNames.length)];
+            
+            const botGroup = createMinecraftCharacter(isCT, true, randomName);
+            
+            if (isCT) { botGroup.position.set((Math.random() - 0.5) * 10, 0, 12 + Math.random() * 5); } 
+            else { botGroup.position.set((Math.random() - 0.5) * 10, 0, -15 - Math.random() * 5); }
+            
+            const gunMesh = botGroup.children[botGroup.children.length - 1]; 
+            botGroup.userData = { team: team, hp: 100, speed: 0.04, lastShot: 0, gun: gunMesh, strafeDir: Math.random() > 0.5 ? 1 : -1 };
+            scene.add(botGroup); bots.push(botGroup);
+        }
+
+        const losRaycaster = new THREE.Raycaster();
+        function hasLineOfSight(startPos, endPos) {
+            const dir = new THREE.Vector3().subVectors(endPos, startPos).normalize(); const dist = startPos.distanceTo(endPos);
+            losRaycaster.set(startPos, dir); losRaycaster.far = dist;
+            return losRaycaster.intersectObjects(walls).length === 0;
+        }
+
+        function updateAmmoUI() {
+            const ammoEl = document.getElementById('ammoCounter');
+            if (isReloading) { ammoEl.innerText = "ПЕРЕЗАРЯДКА..."; ammoEl.classList.add('reloading'); } 
+            else { ammoEl.innerText = `${currentClip} / ${currentReserve}`; ammoEl.classList.remove('reloading'); }
+        }
+
+        function reloadWeapon() {
+            if (isReloading || currentClip === CLIP_SIZE || currentReserve === 0 || gameState !== 'playing') return;
+            isReloading = true; updateAmmoUI(); document.getElementById('reloadBtn').classList.add('reloading'); document.getElementById('reloadBtn').innerText = "...";
+            clearTimeout(reloadTimeout);
+            reloadTimeout = setTimeout(() => {
+                let needed = CLIP_SIZE - currentClip; let toMove = Math.min(needed, currentReserve);
+                currentClip += toMove; currentReserve -= toMove; isReloading = false; updateAmmoUI();
+                document.getElementById('reloadBtn').classList.remove('reloading'); document.getElementById('reloadBtn').innerText = "ПЕРЕЗАРЯДКА";
+            }, 1500); 
+        }
+
+        document.getElementById('reloadBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); if (gameState === 'playing' && !isEditMode) reloadWeapon(); });
+
         let peer = null, conn = null, isMultiplayer = false, isHost = false, otherPlayerMesh = null, lastNetUpdate = 0;
         const mpMessage = document.getElementById('mpMessage'), roomCodeDisplay = document.getElementById('roomCodeDisplay');
-
         const peerConfig = { host: '0.peerjs.com', port: 443, secure: true, debug: 2 };
+
+        const publicRooms = ['ZustexPublicRoom1', 'ZustexPublicRoom2', 'ZustexPublicRoom3', 'ZustexPublicRoom4'];
+        
+        document.getElementById('btnQuickMatch').onclick = () => {
+            mpMessage.style.color = "#00ff00";
+            mpMessage.innerText = "Поиск свободного сервера...";
+            tryConnectPublic(0);
+        };
+
+        function tryConnectPublic(index) {
+            if (index >= publicRooms.length) {
+                mpMessage.style.color = "#ff4500";
+                mpMessage.innerText = "Все публичные сервера заняты. Создайте свою игру.";
+                return;
+            }
+
+            const roomId = publicRooms[index];
+            peer = new Peer(roomId, peerConfig);
+
+            peer.on('open', () => {
+                isHost = true;
+                mpMessage.style.color = "#00ff00";
+                mpMessage.innerText = `Вы создали публичный сервер #${index + 1}!\nОжидание игрока...`;
+                roomCodeDisplay.innerText = roomId; roomCodeDisplay.style.display = 'block';
+                
+                peer.on('connection', (connection) => {
+                    conn = connection; setupConnection();
+                    mpMessage.innerText = "Игрок подключился! Запуск...";
+                    setTimeout(() => startGame('multiplayer'), 1000);
+                });
+            });
+
+            peer.on('error', (err) => {
+                if (err.type === 'unavailable-id') {
+                    peer.destroy(); 
+                    
+                    peer = new Peer(peerConfig); 
+                    peer.on('open', () => {
+                        conn = peer.connect(roomId);
+                        
+                        let connected = false;
+                        conn.on('open', () => { connected = true; setupConnection(); });
+                        
+                        setTimeout(() => {
+                            if (!connected) {
+                                tryConnectPublic(index + 1);
+                            }
+                        }, 2000);
+                    });
+                    peer.on('error', () => { tryConnectPublic(index + 1); });
+                } else {
+                    tryConnectPublic(index + 1);
+                }
+            });
+        }
 
         document.getElementById('hostBtn').onclick = () => {
             mpMessage.style.color = "#ffcc00"; mpMessage.innerText = "Создание комнаты...";
@@ -521,10 +802,25 @@
         };
 
         function setupConnection() {
-            conn.on('open', () => { mpMessage.innerText = "Успешно подключено!"; setTimeout(() => startGame('multiplayer'), 1000); });
+            conn.on('open', () => { 
+                mpMessage.innerText = "Успешно подключено!"; 
+                // Отправляем свой никнейм при подключении
+                if (currentUser) conn.send({ type: 'nickname', nick: currentUser });
+                setTimeout(() => startGame('multiplayer'), 1000); 
+            });
             conn.on('data', (data) => {
                 if (data.type === 'position' && otherPlayerMesh) {
                     otherPlayerMesh.position.set(data.x, data.y, data.z); otherPlayerMesh.rotation.y = data.yaw;
+                } else if (data.type === 'nickname') {
+                    // Принимаем никнейм соперника
+                    opponentNickname = data.nick;
+                    if (otherPlayerMesh) {
+                        const oldTag = otherPlayerMesh.getObjectByName('nameTag');
+                        if (oldTag) otherPlayerMesh.remove(oldTag);
+                        const newTag = createNameTag(opponentNickname, false);
+                        newTag.name = 'nameTag';
+                        otherPlayerMesh.add(newTag);
+                    }
                 } else if (data.type === 'hit') {
                     playerHealth -= data.damage; updateHealthUI();
                     const overlay = document.getElementById('damageOverlay'); overlay.style.opacity = 1; setTimeout(() => overlay.style.opacity = 0, 100);
@@ -541,82 +837,19 @@
             }
         }
 
-        // ИИ Ботов
-        function createHealthBar() {
-            const canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 8;
-            const ctx = canvas.getContext('2d'); ctx.fillStyle = '#00ff00'; ctx.fillRect(0, 0, 64, 8);
-            const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), depthTest: true, transparent: true }));
-            sprite.scale.set(1.5, 0.2, 1); sprite.position.y = 2.2; sprite.userData.ctx = ctx; sprite.userData.texture = sprite.material.map; return sprite;
-        }
-
-        function spawnBot(team) {
-            if (gameState !== 'playing') return;
-            const botGroup = new THREE.Group(); const mat = team === 'blue' ? botBlueMat : botRedMat;
-            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.2, 8), mat); body.position.y = 0.6;
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 8), headMat); head.position.y = 1.6; head.userData.isHead = true;
-            const hpBar = createHealthBar(); 
-
-            if (currentMode === 'range') {
-                botGroup.add(body, head, hpBar);
-                botGroup.position.set((Math.random() - 0.5) * 20, 0, -10);
-                botGroup.userData = { team: 'red', hp: 1, speed: 0.02, dir: 1, hpBar: hpBar };
-                botGroup.userData.hpBar.visible = false;
-            } else {
-                const botGun = createAK47('default'); botGun.position.set(0.3, 0.8, 0.5); botGun.rotation.y = Math.PI; 
-                botGroup.add(body, head, hpBar, botGun);
-                if (team === 'blue') { botGroup.position.set((Math.random() - 0.5) * 10, 0, 15 + Math.random() * 5); } 
-                else { botGroup.position.set((Math.random() - 0.5) * 10, 0, -15 - Math.random() * 5); }
-                botGroup.userData = { team: team, hp: 100, speed: 0.04, lastShot: 0, hpBar: hpBar, gun: botGun, strafeDir: Math.random() > 0.5 ? 1 : -1 };
-            }
-            scene.add(botGroup); bots.push(botGroup);
-        }
-
-        function updateBotHealthBar(bot) {
-            if (!bot.userData.hpBar) return;
-            const pct = Math.max(0, bot.userData.hp) / 100; const ctx = bot.userData.hpBar.userData.ctx;
-            ctx.clearRect(0, 0, 64, 8); ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'; ctx.fillRect(0, 0, 64, 8);
-            ctx.fillStyle = '#00ff00'; ctx.fillRect(0, 0, 64 * pct, 8); bot.userData.hpBar.userData.texture.needsUpdate = true;
-        }
-
-        const losRaycaster = new THREE.Raycaster();
-        function hasLineOfSight(startPos, endPos) {
-            const dir = new THREE.Vector3().subVectors(endPos, startPos).normalize(); const dist = startPos.distanceTo(endPos);
-            losRaycaster.set(startPos, dir); losRaycaster.far = dist;
-            return losRaycaster.intersectObjects(walls).length === 0;
-        }
-
-        function updateAmmoUI() {
-            const ammoEl = document.getElementById('ammoCounter');
-            if (isReloading) { ammoEl.innerText = "ПЕРЕЗАРЯДКА..."; ammoEl.classList.add('reloading'); } 
-            else { ammoEl.innerText = `${currentClip} / ${currentReserve}`; ammoEl.classList.remove('reloading'); }
-        }
-
-        function reloadWeapon() {
-            if (isReloading || currentClip === CLIP_SIZE || currentReserve === 0 || gameState !== 'playing') return;
-            isReloading = true; updateAmmoUI(); document.getElementById('reloadBtn').classList.add('reloading'); document.getElementById('reloadBtn').innerText = "...";
-            clearTimeout(reloadTimeout);
-            reloadTimeout = setTimeout(() => {
-                let needed = CLIP_SIZE - currentClip; let toMove = Math.min(needed, currentReserve);
-                currentClip += toMove; currentReserve -= toMove; isReloading = false; updateAmmoUI();
-                document.getElementById('reloadBtn').classList.remove('reloading'); document.getElementById('reloadBtn').innerText = "ПЕРЕЗАРЯДКА";
-            }, 1500); 
-        }
-
-        document.getElementById('reloadBtn').addEventListener('pointerdown', (e) => { e.preventDefault(); if (gameState === 'playing' && !isEditMode) reloadWeapon(); });
-
         function startGame(mode) {
             currentMode = mode; isMultiplayer = (mode === 'multiplayer');
             gameState = 'playing'; playerHealth = 100; scoreBlue = 0; scoreRed = 0; timeLeft = 150; clearBots();
             currentClip = 30; currentReserve = 170; isReloading = false; clearTimeout(reloadTimeout);
             document.getElementById('reloadBtn').innerText = "ПЕРЕЗАРЯДКА"; document.getElementById('reloadBtn').classList.remove('reloading'); updateAmmoUI();
 
-            if (isMultiplayer) { if (isHost) camera.position.set(0, 1.7, 10); else camera.position.set(0, 1.7, -10); } 
-            else { camera.position.set(0, 1.7, 10); }
+            camera.position.set(0, 1.7, 15); 
             
             yaw = 0; pitch = 0; camera.rotation.set(0, 0, 0); updatePlayerGun(); 
-            mainMenu.classList.add('hidden'); modeMenu.classList.add('hidden'); settingsMenu.classList.add('hidden'); shopMenu.classList.add('hidden'); gameOverScreen.classList.add('hidden'); mpMenu.classList.add('hidden');
+            hideAllMenus();
             hud.style.display = 'block'; saveBtn.style.display = 'none';
             document.getElementById('crosshair-container').style.display = 'block';
+            document.getElementById('exitGameBtn').style.display = 'block';
 
             document.getElementById('scoreBlue').innerText = '0'; document.getElementById('scoreRed').innerText = '0';
             document.getElementById('healthContainer').style.display = 'block'; updateHealthUI(); updateTimerUI();
@@ -624,11 +857,18 @@
             if (isMultiplayer) {
                 document.getElementById('teamScore').style.display = 'none'; document.getElementById('timerDisplay').style.display = 'none';
                 if (otherPlayerMesh) scene.remove(otherPlayerMesh);
-                otherPlayerMesh = new THREE.Group();
-                const body = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.2, 8), new THREE.MeshLambertMaterial({ color: 0xff00ff })); body.position.y = 0.6;
-                const head = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 8), new THREE.MeshLambertMaterial({ color: 0xff00ff })); head.position.y = 1.6;
-                otherPlayerMesh.add(body, head);
-                if (isHost) otherPlayerMesh.position.set(0, 0, -10); else otherPlayerMesh.position.set(0, 0, 10);
+                
+                // Создаем модель соперника
+                otherPlayerMesh = createMinecraftCharacter(true, false); // false = не бот
+                
+                // Если мы уже получили никнейм (соперник отправил его раньше), вешаем табличку
+                if (opponentNickname !== "Player") {
+                    const tag = createNameTag(opponentNickname, false);
+                    tag.name = 'nameTag';
+                    otherPlayerMesh.add(tag);
+                }
+
+                if (isHost) otherPlayerMesh.position.set(0, 0, 15); else otherPlayerMesh.position.set(0, 0, -15);
                 scene.add(otherPlayerMesh);
             } else {
                 document.getElementById('teamScore').style.display = 'flex'; document.getElementById('timerDisplay').style.display = 'block';
@@ -636,7 +876,8 @@
                     document.getElementById('teamScore').style.display = 'none'; document.getElementById('timerDisplay').style.display = 'none'; document.getElementById('healthContainer').style.display = 'none';
                     for(let i=0; i<6; i++) spawnBot('red');
                 } else {
-                    for(let i=0; i<4; i++) spawnBot('blue'); for(let i=0; i<5; i++) spawnBot('red');
+                    for(let i=0; i<4; i++) spawnBot('blue'); 
+                    for(let i=0; i<5; i++) spawnBot('red');
                     clearInterval(matchTimerInterval);
                     matchTimerInterval = setInterval(() => { if (gameState === 'playing') { timeLeft--; updateTimerUI(); if (timeLeft <= 0) endMatch(); } }, 1000);
                 }
@@ -661,7 +902,7 @@
         let yaw = 0, pitch = 0, cameraPointerId = null, previousX = 0, previousY = 0, jumpPointerId = null, jumpPrevX = 0, jumpPrevY = 0;
 
         document.body.addEventListener('pointerdown', (e) => {
-            if (gameState !== 'playing' || isEditMode || ['shootBtn', 'joystickZone', 'joystickKnob', 'jumpBtn', 'saveBtn', 'reloadBtn'].includes(e.target.id)) return;
+            if (gameState !== 'playing' || isEditMode || ['shootBtn', 'joystickZone', 'joystickKnob', 'jumpBtn', 'saveBtn', 'reloadBtn', 'exitGameBtn'].includes(e.target.id)) return;
             if (cameraPointerId === null) { cameraPointerId = e.pointerId; previousX = e.clientX; previousY = e.clientY; }
         });
 
@@ -735,7 +976,7 @@
                 const intersectsPlayer = raycaster.intersectObject(otherPlayerMesh, true);
                 if (intersectsPlayer.length > 0 && conn && conn.open) {
                     document.getElementById('hitMarker').style.display = 'block'; setTimeout(() => { document.getElementById('hitMarker').style.display = 'none'; }, 100);
-                    let isHeadshot = intersectsPlayer[0].object.geometry.type === 'SphereGeometry'; 
+                    let isHeadshot = intersectsPlayer[0].object.userData.isHead === true; 
                     conn.send({ type: 'hit', damage: isHeadshot ? 100 : 34 });
                     return;
                 }
@@ -754,7 +995,7 @@
                     if (currentMode === 'range') {
                         scene.remove(hitObject); if (bots.includes(hitObject)) bots.splice(bots.indexOf(hitObject), 1); setTimeout(() => spawnBot('red'), 800); 
                     } else {
-                        const damage = isHeadshot ? 100 : 34; hitObject.userData.hp -= damage; updateBotHealthBar(hitObject);
+                        const damage = isHeadshot ? 100 : 34; hitObject.userData.hp -= damage;
                         const vector = hit.point.clone().project(camera); const x = (vector.x * 0.5 + 0.5) * window.innerWidth; const y = (-(vector.y * 0.5) + 0.5) * window.innerHeight;
                         const div = document.createElement('div'); div.className = `damage-text ${isHeadshot ? 'headshot' : ''}`; div.innerText = damage;
                         div.style.left = `${x}px`; div.style.top = `${y}px`; document.body.appendChild(div); setTimeout(() => div.remove(), 600);
@@ -770,10 +1011,28 @@
             }
         }
 
+        let lastFrameTime = performance.now();
+        let frameCount = 0;
+        let fps = 0;
+
         function animate() {
             requestAnimationFrame(animate);
+            
+            frameCount++;
+            const now = performance.now();
+            if (now - lastFrameTime >= 1000) {
+                fps = frameCount;
+                frameCount = 0;
+                lastFrameTime = now;
+                if (showFPS) {
+                    document.getElementById('fpsCounter').innerText = 'FPS: ' + fps;
+                }
+            }
+
             if (gameState === 'playing' && !isEditMode) {
+                let isMoving = false;
                 if (moveY !== 0 || moveX !== 0) {
+                    isMoving = true;
                     const forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw)); const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
                     const velocity = new THREE.Vector3(); velocity.addScaledVector(forward, -moveY * 0.08); velocity.addScaledVector(right, moveX * 0.08);
                     let newPos = camera.position.clone().add(velocity); let canMove = true;
@@ -783,6 +1042,23 @@
                 
                 if (isJumpBtnPressed && !isJumping) { velocityY = jumpForce; isJumping = true; }
                 if (isJumping) { velocityY -= gravity; camera.position.y += velocityY; if (camera.position.y <= groundY) { camera.position.y = groundY; velocityY = 0; isJumping = false; } }
+
+                legsGroup.position.set(camera.position.x, 0, camera.position.z);
+                legsGroup.rotation.y = yaw; 
+
+                if (isJumping) {
+                    leftLeg.rotation.x = -0.6; rightLeg.rotation.x = -0.6;
+                    legsGroup.position.y = camera.position.y - 1.7; 
+                } else if (isMoving) {
+                    const time = Date.now() * 0.012;
+                    leftLeg.rotation.x = Math.sin(time) * 0.6; 
+                    rightLeg.rotation.x = -Math.sin(time) * 0.6;
+                    legsGroup.position.y = 0; 
+                } else {
+                    leftLeg.rotation.x += (0 - leftLeg.rotation.x) * 0.1; 
+                    rightLeg.rotation.x += (0 - rightLeg.rotation.x) * 0.1;
+                    legsGroup.position.y = 0;
+                }
 
                 if (chType === 'dynamic') {
                     if (isShooting || moveX !== 0 || moveY !== 0 || isJumping) { targetGap = chBaseGap + 15; } else { targetGap = chBaseGap; }
@@ -794,7 +1070,7 @@
                 if (!isMultiplayer && currentMode === 'tdm') {
                     for (let i = bots.length - 1; i >= 0; i--) {
                         const bot = bots[i];
-                        if (!bot || !bot.userData || bot.userData.team === 'red' && !bot.userData.gun) continue;
+                        if (!bot || !bot.userData) continue;
                         let closestDist = Infinity; let target = null;
                         if (bot.userData.team === 'blue') {
                             for (let j = 0; j < bots.length; j++) { const enemy = bots[j]; if (enemy.userData.team === 'red') { const d = bot.position.distanceTo(enemy.position); if (d < closestDist) { closestDist = d; target = enemy; } } }
@@ -811,12 +1087,14 @@
                             if (moveVector.length() > 0) { moveVector.normalize(); bot.position.x += moveVector.x * bot.userData.speed; bot.position.z += moveVector.z * bot.userData.speed; }
                             bot.lookAt(targetPos.x, bot.position.y, targetPos.z);
                             if (closestDist < 40 && hasLineOfSight(bot.position, targetPos) && Date.now() - bot.userData.lastShot > 800) {
-                                bot.userData.lastShot = Date.now(); bot.userData.gun.userData.flash.material.opacity = 1; setTimeout(() => { bot.userData.gun.userData.flash.material.opacity = 0; }, 50);
-                                let hitChance = 0.8; if (closestDist > 20) hitChance = 0.4; if (closestDist > 30) hitChance = 0.2;
-                                if (Math.random() < hitChance) {
+                                bot.userData.lastShot = Date.now(); 
+                                if (bot.userData.gun.userData.flash) {
+                                    bot.userData.gun.userData.flash.material.opacity = 1; setTimeout(() => { bot.userData.gun.userData.flash.material.opacity = 0; }, 50);
+                                }
+                                if (Math.random() < 0.8) {
                                     if (target === 'player') { playerHealth -= 10; updateHealthUI(); const overlay = document.getElementById('damageOverlay'); overlay.style.opacity = 1; setTimeout(() => overlay.style.opacity = 0, 100); if (playerHealth <= 0) { endMatch(); return; } } 
                                     else {
-                                        target.userData.hp -= 20; updateBotHealthBar(target);
+                                        target.userData.hp -= 20;
                                         if (target.userData.hp <= 0) {
                                             scene.remove(target); if (bots.includes(target)) bots.splice(bots.indexOf(target), 1); 
                                             if (bot.userData.team === 'red') { scoreRed++; document.getElementById('scoreRed').innerText = scoreRed; if (scoreRed >= 50) { endMatch(); return; } setTimeout(() => spawnBot('blue'), 1500); } 
@@ -881,6 +1159,7 @@
 
         document.getElementById('btnCustomize').addEventListener('click', () => {
             settingsMenu.classList.add('hidden'); hud.style.display = 'block'; document.getElementById('crosshair-container').style.display = 'none'; document.getElementById('topUI').style.display = 'none'; ammoCounter.style.display = 'block'; 
+            document.getElementById('exitGameBtn').style.display = 'none'; 
             isEditMode = true; joyZone.classList.add('editable'); shootBtn.classList.add('editable'); jumpBtn.classList.add('editable'); reloadBtn.classList.add('editable'); ammoCounter.classList.add('editable'); saveBtn.style.display = 'block';
         });
         
